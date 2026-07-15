@@ -1,0 +1,12 @@
+[
+  { "name": "Explore", "preconditions": {}, "effects": {} },
+  { "name": "DiscoverResource", "preconditions": {}, "effects": {} },
+  { "name": "CollectFood", "preconditions": {}, "effects": {} },
+  { "name": "CollectWood", "preconditions": {}, "effects": {} },
+  { "name": "DepositResource", "preconditions": {}, "effects": {} },
+  { "name": "DefendNest", "preconditions": {}, "effects": {} },
+  { "name": "AttackEnemy", "preconditions": {}, "effects": {} },
+  { "name": "Eat", "preconditions": {}, "effects": {} },
+  { "name": "Rest", "preconditions": {}, "effects": {} },
+  { "name": "ReturnToNest", "preconditions": {}, "effects": {} }
+]

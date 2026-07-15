@@ -1,0 +1,12 @@
+[
+  {
+    "type": "Food",
+    "maxAmount": 100,
+    "respawnTime": 20
+  },
+  {
+    "type": "Wood",
+    "maxAmount": 100,
+    "respawnTime": 20
+  }
+]

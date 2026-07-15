@@ -1,0 +1,15 @@
+[
+  { "name": "MoveTo", "cost": 1.0 },
+  { "name": "Eat", "cost": 1.0 },
+  { "name": "Rest", "cost": 1.0 },
+  { "name": "ReturnToNest", "cost": 1.0 },
+  { "name": "RandomExplore", "cost": 1.0 },
+  { "name": "LayReturnPheromone", "cost": 1.0 },
+  { "name": "LayResourcePheromone", "cost": 1.0 },
+  { "name": "ReportResource", "cost": 1.0 },
+  { "name": "FollowPheromone", "cost": 1.0 },
+  { "name": "PickupResource", "cost": 1.0 },
+  { "name": "DepositResource", "cost": 1.0 },
+  { "name": "PatrolNest", "cost": 1.0 },
+  { "name": "AttackTarget", "cost": 1.0 }
+]
