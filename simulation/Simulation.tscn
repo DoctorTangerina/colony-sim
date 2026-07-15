@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cmi0msx5vjkia" path="res://simulation/simulation.gd" id="1"]
 [ext_resource type="Script" path="res://organization/nest.gd" id="2"]
+[ext_resource type="Script" uid="uid://4wlj7k7xeod0" path="res://resources/resource_manager.gd" id="3"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_main"]
 vertices = PackedVector2Array(1142, 638, 10, 638, 10, 10, 1142, 10)
@@ -27,3 +28,6 @@ shape = SubResource("CircleShape2D_nest")
 [node name="Sprite" type="Polygon2D" parent="Nest"]
 polygon = PackedVector2Array(20, 0, 10, 17.32, -10, 17.32, -20, 0, -10, -17.32, 10, -17.32)
 color = Color(0.6, 0.4, 0.2, 1)
+
+[node name="ResourceManager" type="Node" parent="."]
+script = ExtResource("3")
