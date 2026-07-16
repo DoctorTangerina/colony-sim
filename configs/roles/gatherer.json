@@ -1,6 +1,31 @@
 {
   "name": "Gatherer",
-  "allowedGoals": [],
-  "allowedActions": [],
-  "priorityModifiers": {}
+  "allowedGoals": [
+    "CollectFood",
+    "CollectWood",
+    "DepositResource"
+  ],
+  "allowedActions": [
+    "MoveTo",
+    "PickupFood",
+    "PickupWood",
+    "DepositResource"
+  ],
+  "priorityModifiers": {
+    "CollectFood": 2.0,
+    "CollectWood": 2.0,
+    "DepositResource": 1.5,
+    "Eat": 0.5,
+    "Rest": 0.5,
+    "ReturnToNest": 0.5
+  },
+  "distribution": {
+    "rules": [
+      { "if_resource_at_or_below": { "type": "Food", "level": "low" }, "percent": 0.5 },
+      { "if_resource_at_or_below": { "type": "Wood", "level": "low" }, "percent": 0.5 },
+      { "if_resource_at_or_below": { "type": "Food", "level": "low", "multiply_level": 3 }, "percent": 0.3 },
+      { "if_resource_at_or_below": { "type": "Wood", "level": "low", "multiply_level": 3 }, "percent": 0.3 },
+      { "default": true, "percent": 0 }
+    ]
+  }
 }

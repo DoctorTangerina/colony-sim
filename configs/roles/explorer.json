@@ -1,6 +1,25 @@
 {
   "name": "Explorer",
-  "allowedGoals": [],
-  "allowedActions": [],
-  "priorityModifiers": {}
+  "allowedGoals": [
+    "Explore",
+    "DiscoverResource"
+  ],
+  "allowedActions": [
+    "MoveTo",
+    "RandomExplore",
+    "ReportResource"
+  ],
+  "priorityModifiers": {
+    "Explore": 2.0,
+    "DiscoverResource": 2.0,
+    "Eat": 0.5,
+    "Rest": 0.5,
+    "ReturnToNest": 0.5
+  },
+  "distribution": {
+    "rules": [
+      { "if_resource_at_or_below": { "type": "Food", "level": "abundant", "and_type": "Wood", "and_level": "abundant" }, "percent": 0.4 },
+      { "default": true, "percent": 0.2 }
+    ]
+  }
 }

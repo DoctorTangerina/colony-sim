@@ -1,12 +1,62 @@
 [
-  { "name": "Explore", "preconditions": {}, "effects": {} },
-  { "name": "DiscoverResource", "preconditions": {}, "effects": {} },
-  { "name": "CollectFood", "preconditions": {}, "effects": {} },
-  { "name": "CollectWood", "preconditions": {}, "effects": {} },
-  { "name": "DepositResource", "preconditions": {}, "effects": {} },
-  { "name": "DefendNest", "preconditions": {}, "effects": {} },
-  { "name": "AttackEnemy", "preconditions": {}, "effects": {} },
-  { "name": "Eat", "preconditions": {}, "effects": {} },
-  { "name": "Rest", "preconditions": {}, "effects": {} },
-  { "name": "ReturnToNest", "preconditions": {}, "effects": {} }
+  {
+    "name": "Explore",
+    "desirability": 3.0,
+    "preconditions": {},
+    "effects": { "resource_visible": true }
+  },
+  {
+    "name": "DiscoverResource",
+    "desirability": 4.0,
+    "preconditions": { "near_unreported_resource": true },
+    "effects": { "resource_reported": true }
+  },
+  {
+    "name": "CollectFood",
+    "desirability": 5.0,
+    "preconditions": { "food_visible": true },
+    "effects": { "has_food": true }
+  },
+  {
+    "name": "CollectWood",
+    "desirability": 5.0,
+    "preconditions": { "wood_visible": true },
+    "effects": { "has_wood": true }
+  },
+  {
+    "name": "DepositResource",
+    "desirability": 6.0,
+    "preconditions": { "has_item": true, "at_nest": true },
+    "effects": { "has_food": false, "has_wood": false }
+  },
+  {
+    "name": "DefendNest",
+    "desirability": 8.0,
+    "preconditions": { "enemy_near": true },
+    "effects": { "enemy_near": false }
+  },
+  {
+    "name": "AttackEnemy",
+    "desirability": 7.0,
+    "preconditions": { "enemy_near": true },
+    "effects": { "enemy_near": false }
+  },
+  {
+    "name": "Eat",
+    "desirability": 9.0,
+    "preconditions": { "has_food": true },
+    "effects": { "high_hunger": false, "has_food": false }
+  },
+  {
+    "name": "Rest",
+    "desirability": 8.0,
+    "preconditions": { "at_nest": true },
+    "effects": { "low_energy": false }
+  },
+  {
+    "name": "ReturnToNest",
+    "desirability": 4.0,
+    "preconditions": {},
+    "effects": { "at_nest": true }
+  }
 ]

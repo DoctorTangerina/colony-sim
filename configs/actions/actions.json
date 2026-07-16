@@ -1,15 +1,68 @@
 [
-  { "name": "MoveTo", "cost": 1.0 },
-  { "name": "Eat", "cost": 1.0 },
-  { "name": "Rest", "cost": 1.0 },
-  { "name": "ReturnToNest", "cost": 1.0 },
-  { "name": "RandomExplore", "cost": 1.0 },
-  { "name": "LayReturnPheromone", "cost": 1.0 },
-  { "name": "LayResourcePheromone", "cost": 1.0 },
-  { "name": "ReportResource", "cost": 1.0 },
-  { "name": "FollowPheromone", "cost": 1.0 },
-  { "name": "PickupResource", "cost": 1.0 },
-  { "name": "DepositResource", "cost": 1.0 },
-  { "name": "PatrolNest", "cost": 1.0 },
-  { "name": "AttackTarget", "cost": 1.0 }
+  {
+    "name": "MoveTo",
+    "cost": 1.0,
+    "preconditions": {},
+    "effects": { "at_nest": false }
+  },
+  {
+    "name": "Eat",
+    "cost": 2.0,
+    "preconditions": { "has_food": true },
+    "effects": { "high_hunger": false, "has_food": false }
+  },
+  {
+    "name": "Rest",
+    "cost": 2.0,
+    "preconditions": { "at_nest": true },
+    "effects": { "low_energy": false }
+  },
+  {
+    "name": "ReturnToNest",
+    "cost": 1.5,
+    "preconditions": {},
+    "effects": { "at_nest": true }
+  },
+  {
+    "name": "RandomExplore",
+    "cost": 0.5,
+    "preconditions": {},
+    "effects": { "resource_visible": true }
+  },
+  {
+    "name": "ReportResource",
+    "cost": 0.3,
+    "preconditions": { "at_nest": true, "near_unreported_resource": true },
+    "effects": { "resource_reported": true, "near_unreported_resource": false }
+  },
+  {
+    "name": "PickupFood",
+    "cost": 1.0,
+    "preconditions": { "food_visible": true },
+    "effects": { "has_food": true }
+  },
+  {
+    "name": "PickupWood",
+    "cost": 1.0,
+    "preconditions": { "wood_visible": true },
+    "effects": { "has_wood": true }
+  },
+  {
+    "name": "DepositResource",
+    "cost": 1.0,
+    "preconditions": { "has_item": true, "at_nest": true },
+    "effects": { "has_food": false, "has_wood": false }
+  },
+  {
+    "name": "PatrolNest",
+    "cost": 1.5,
+    "preconditions": {},
+    "effects": {}
+  },
+  {
+    "name": "AttackTarget",
+    "cost": 3.0,
+    "preconditions": { "enemy_near": true },
+    "effects": { "enemy_near": false }
+  }
 ]
