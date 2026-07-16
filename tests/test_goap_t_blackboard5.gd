@@ -180,26 +180,22 @@ func _test_clean_stale_returns_count() -> void:
 
 
 func _test_world_state_known_food_position() -> void:
-	print("[Test] WorldStateBuilder includes known_food_position")
-	var state = WorldStateBuilder.build("None", 100.0, 0.0, false, false, false, false, true, false)
-	_assert(state.has("known_food_position"), "World state has known_food_position key")
-	_assert(state.get("known_food_position") == true, "known_food_position is true when set")
+	print("[Test] WorldState includes known_food_position")
+	var state := WorldState.build("None", 100.0, 0.0, false, false, false, false, true, false)
+	_assert(state.known_food_position == true, "known_food_position is true when set")
 
 
 func _test_world_state_known_wood_position() -> void:
-	print("[Test] WorldStateBuilder includes known_wood_position")
-	var state = WorldStateBuilder.build("None", 100.0, 0.0, false, false, false, false, false, true)
-	_assert(state.has("known_wood_position"), "World state has known_wood_position key")
-	_assert(state.get("known_wood_position") == true, "known_wood_position is true when set")
+	print("[Test] WorldState includes known_wood_position")
+	var state := WorldState.build("None", 100.0, 0.0, false, false, false, false, false, true)
+	_assert(state.known_wood_position == true, "known_wood_position is true when set")
 
 
 func _test_world_state_no_known_positions() -> void:
-	print("[Test] WorldStateBuilder default known positions are false")
-	var state = WorldStateBuilder.build("None", 100.0, 0.0, false, false, false)
-	_assert(state.has("known_food_position"), "World state has known_food_position key")
-	_assert(state.get("known_food_position") == false, "Default known_food_position is false")
-	_assert(state.has("known_wood_position"), "World state has known_wood_position key")
-	_assert(state.get("known_wood_position") == false, "Default known_wood_position is false")
+	print("[Test] WorldState default known positions are false")
+	var state := WorldState.build("None", 100.0, 0.0, false, false, false)
+	_assert(state.known_food_position == false, "Default known_food_position is false")
+	_assert(state.known_wood_position == false, "Default known_wood_position is false")
 
 
 func _test_move_to_uses_known_food_position() -> void:
