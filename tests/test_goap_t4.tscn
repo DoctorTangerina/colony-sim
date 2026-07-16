@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dn7ulhw88vqlu"]
 
-[ext_resource type="Script" path="res://tests/test_goap_t4.gd" id="1"]
+[ext_resource type="Script" uid="uid://dgs7hj6v4uygo" path="res://tests/test_goap_t4.gd" id="1"]
 
-[node name="TestGoapT4" type="Node"]
+[node name="TestGoapT4" type="Node" unique_id=588923117]
 script = ExtResource("1")

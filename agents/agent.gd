@@ -15,12 +15,14 @@ var target_resource: Node = null
 var nest_ref: Node2D = null
 var resource_manager_ref: Node = null
 
-var _navigator: Node = null
-var _nest_zone: Node = null
-var _role_acquisition: Node = null
-var _planner = null
-var _goal_selector = null
-var _role_component: Node = null
+@onready var nav_agent: NavigationAgent2D = $NavAgent
+@onready var _navigator: Node = $Navigator
+@onready var _nest_zone: Node = $NestZone
+@onready var _role_component: Node = $RoleComponent
+@onready var _role_acquisition: Node = $RoleAcquisition
+@onready var _planner: Node = $GOAPPlanner
+@onready var _goal_selector: Node = $GOAPGoalSelector
+
 var _action_index: int = 0
 var _action_in_progress: bool = false
 var _planning_interval: float = 2.0
@@ -32,18 +34,21 @@ var discovered_resource_pos: Vector2 = Vector2.ZERO
 var known_food_positions: Dictionary = {}
 var known_wood_positions: Dictionary = {}
 
-var _map_min := Vector2(32, 32)
-var _map_max := Vector2(1120, 616)
-
-@onready var nav_agent: NavigationAgent2D = $NavAgent
+var _map_min: Vector2
+var _map_max: Vector2
 
 
 func _ready() -> void:
 	if agent_id.is_empty():
 		agent_id = str(get_instance_id())
-
+	
+	# Validate required child nodes
+	if not nav_agent or not _navigator or not _nest_zone or not _role_component or not _role_acquisition or not _planner or not _goal_selector:
+		push_error("Agent missing required child nodes: NavAgent, Navigator, NestZone, RoleComponent, RoleAcquisition, GOAPPlanner, GOAPGoalSelector")
+		return
+	
 	_load_sim_config()
-	_create_modules()
+	_setup_modules()
 
 
 func _load_sim_config() -> void:
@@ -51,45 +56,23 @@ func _load_sim_config() -> void:
 	_agent_speed = data.get("agentSpeed", 200.0)
 	_planning_interval = data.get("planningInterval", 2.0)
 	_discovery_radius = data.get("discoveryRadius", 50.0)
-	_map_min = Vector2(data.get("mapMinX", 32), data.get("mapMinY", 32))
-	_map_max = Vector2(data.get("mapMaxX", 1120), data.get("mapMaxY", 616))
+	if not data.has("mapMinX") or not data.has("mapMinY") or not data.has("mapMaxX") or not data.has("mapMaxY"):
+		push_error("agent: simulation.json missing map bounds (mapMinX, mapMinY, mapMaxX, mapMaxY), using defaults")
+		_map_min = Vector2(32, 32)
+		_map_max = Vector2(1120, 616)
+		return
+	_map_min = Vector2(data["mapMinX"], data["mapMinY"])
+	_map_max = Vector2(data["mapMaxX"], data["mapMaxY"])
 
 
-func _create_modules() -> void:
-	var NavigatorScript = preload("res://agents/navigator.gd")
-	_navigator = NavigatorScript.new()
-	_navigator.name = "Navigator"
-	add_child(_navigator)
+func _setup_modules() -> void:
 	_navigator.setup(nav_agent, self, _agent_speed)
 	_navigator.arrived.connect(_on_arrived_at_target)
 
-	var NestZoneScript = preload("res://agents/nest_zone.gd")
-	_nest_zone = NestZoneScript.new()
-	_nest_zone.name = "NestZone"
-	add_child(_nest_zone)
-
-	var RoleComponentScript = preload("res://agents/role_component.gd")
-	_role_component = RoleComponentScript.new()
-	_role_component.name = "RoleComponent"
-	add_child(_role_component)
-
-	var RoleAcquisitionScript = preload("res://agents/role_acquisition.gd")
-	_role_acquisition = RoleAcquisitionScript.new()
-	_role_acquisition.name = "RoleAcquisition"
-	add_child(_role_acquisition)
-	_role_acquisition.role_changed.connect(_on_role_changed)
-
-	var PlannerScript = preload("res://agents/planner/goap_planner.gd")
-	_planner = PlannerScript.new()
-	_planner.name = "GOAPPlanner"
-	add_child(_planner)
-
-	var GoalSelectorScript = preload("res://agents/goal_selector.gd")
-	_goal_selector = GoalSelectorScript.new()
-	_goal_selector.name = "GOAPGoalSelector"
-	add_child(_goal_selector)
 	_goal_selector.initialize(_planner)
 	_goal_selector.set_role_component(_role_component)
+
+	_role_acquisition.role_changed.connect(_on_role_changed)
 
 	action_completed.connect(_on_action_completed)
 
@@ -98,7 +81,8 @@ func setup(nest: Node2D, resource_manager: Node) -> void:
 	nest_ref = nest
 	resource_manager_ref = resource_manager
 	_nest_zone.setup(nest_ref, self)
-	var cooldown_duration: float = ConfigLoader.load_dict("res://configs/simulation.json").get("roleCooldown", 10.0)
+	var sim_config: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
+	var cooldown_duration: float = sim_config.get("roleCooldown", 10.0)
 	_role_acquisition.setup(_get_om(), _role_component, _nest_zone, agent_id, cooldown_duration)
 
 
@@ -146,9 +130,10 @@ func _run_planning_cycle() -> void:
 				current_plan = []
 	else:
 		current_goal = ""
+		current_plan = []
 
 
-func _build_world_state() -> Dictionary:
+func _build_world_state() -> WorldState:
 	var at_nest := false
 	if nest_ref:
 		var dist := global_position.distance_to(nest_ref.global_position)
@@ -198,7 +183,7 @@ func _build_world_state() -> Dictionary:
 	var has_known_food: bool = not known_food_positions.is_empty()
 	var has_known_wood: bool = not known_wood_positions.is_empty()
 
-	return WorldStateBuilder.build(held_item, energy, hunger, at_nest, food_visible, wood_visible, near_unreported, has_known_food, has_known_wood)
+	return WorldState.build(held_item, energy, hunger, at_nest, food_visible, wood_visible, near_unreported, has_known_food, has_known_wood)
 
 
 func _execute_current_action() -> void:

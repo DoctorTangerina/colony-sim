@@ -5,8 +5,8 @@ var active_nodes: Array[ResourceNode] = []
 
 const RESOURCE_SCENE: PackedScene = preload("res://resources/resource_node.tscn")
 
-var _map_min := Vector2(32, 32)
-var _map_max := Vector2(1120, 616)
+var _map_min: Vector2
+var _map_max: Vector2
 
 func _ready() -> void:
 	_load_config()
@@ -16,8 +16,13 @@ func _ready() -> void:
 
 func _load_config() -> void:
 	var data: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
-	_map_min = Vector2(data.get("mapMinX", 32), data.get("mapMinY", 32))
-	_map_max = Vector2(data.get("mapMaxX", 1120), data.get("mapMaxY", 616))
+	if not data.has("mapMinX") or not data.has("mapMinY") or not data.has("mapMaxX") or not data.has("mapMaxY"):
+		push_error("resource_manager: simulation.json missing map bounds (mapMinX, mapMinY, mapMaxX, mapMaxY), using defaults")
+		_map_min = Vector2(32, 32)
+		_map_max = Vector2(1120, 616)
+		return
+	_map_min = Vector2(data["mapMinX"], data["mapMinY"])
+	_map_max = Vector2(data["mapMaxX"], data["mapMaxY"])
 
 func _load_definitions() -> void:
 	var entries: Array = ConfigLoader.load_array("res://configs/resources.json")

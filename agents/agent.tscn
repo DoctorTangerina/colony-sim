@@ -1,6 +1,12 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://agents/agent.gd" id="1_agent"]
+[ext_resource type="Script" path="res://agents/navigator.gd" id="2_navigator"]
+[ext_resource type="Script" path="res://agents/nest_zone.gd" id="3_nest_zone"]
+[ext_resource type="Script" path="res://agents/role_component.gd" id="4_role_component"]
+[ext_resource type="Script" path="res://agents/role_acquisition.gd" id="5_role_acquisition"]
+[ext_resource type="Script" path="res://agents/planner/goap_planner.gd" id="6_goap_planner"]
+[ext_resource type="Script" path="res://agents/goal_selector.gd" id="7_goal_selector"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_agent"]
 size = Vector2(16, 16)
@@ -18,3 +24,21 @@ target_desired_distance = 4.0
 [node name="Sprite" type="Polygon2D" parent="."]
 color = Color(0.2, 0.4, 0.9, 1)
 polygon = PackedVector2Array(8, -8, 8, 8, -8, 8, -8, -8)
+
+[node name="Navigator" type="Node" parent="."]
+script = ExtResource("2_navigator")
+
+[node name="NestZone" type="Node" parent="."]
+script = ExtResource("3_nest_zone")
+
+[node name="RoleComponent" type="Node" parent="."]
+script = ExtResource("4_role_component")
+
+[node name="RoleAcquisition" type="Node" parent="."]
+script = ExtResource("5_role_acquisition")
+
+[node name="GOAPPlanner" type="Node" parent="."]
+script = ExtResource("6_goap_planner")
+
+[node name="GOAPGoalSelector" type="Node" parent="."]
+script = ExtResource("7_goal_selector")

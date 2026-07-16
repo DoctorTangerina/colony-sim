@@ -1,7 +1,7 @@
 extends Node
 
-var _actions: Array[Dictionary] = []
-var _goals: Array[Dictionary] = []
+var _actions: Array = []
+var _goals: Array = []
 var _max_depth: int = 20
 
 
@@ -9,19 +9,19 @@ func _ready() -> void:
 	_load_configs()
 
 
-func set_actions(actions: Array[Dictionary]) -> void:
+func set_actions(actions: Array) -> void:
 	_actions = actions
 
 
-func set_goals(goals: Array[Dictionary]) -> void:
+func set_goals(goals: Array) -> void:
 	_goals = goals
 
 
-func get_actions() -> Array[Dictionary]:
+func get_actions() -> Array:
 	return _actions
 
 
-func get_goals() -> Array[Dictionary]:
+func get_goals() -> Array:
 	return _goals
 
 
@@ -32,7 +32,7 @@ func get_goal_by_name(goal_name: String) -> Dictionary:
 	return {}
 
 
-func create_plan(goal_name: String, world_state: Dictionary, allowed_actions: Array = []) -> Array:
+func create_plan(goal_name: String, world_state: WorldState, allowed_actions: Array = []) -> Array:
 	var goal := get_goal_by_name(goal_name)
 	if goal.is_empty():
 		return []
@@ -60,7 +60,7 @@ func cancel_plan() -> void:
 	pass
 
 
-func validate_plan(plan: Array, world_state: Dictionary) -> bool:
+func validate_plan(plan: Array, world_state: WorldState) -> bool:
 	if plan.is_empty():
 		return false
 	var state := world_state.duplicate()
@@ -74,7 +74,7 @@ func validate_plan(plan: Array, world_state: Dictionary) -> bool:
 	return true
 
 
-func _forward_search(start_state: Dictionary, goal_state: Dictionary, all_actions: Array[Dictionary]) -> Array:
+func _forward_search(start_state: WorldState, goal_state: Dictionary, all_actions: Array) -> Array:
 	var open: Array = []
 	var visited: Dictionary = {}
 
@@ -106,7 +106,7 @@ func _forward_search(start_state: Dictionary, goal_state: Dictionary, all_action
 				continue
 
 			var effects: Dictionary = action.get("effects", {})
-			var new_state: Dictionary = GoapUtils.merge_states(current["state"], effects)
+			var new_state: WorldState = GoapUtils.merge_states(current["state"], effects)
 			var new_state_key := _state_to_key(new_state)
 			if visited.has(new_state_key):
 				continue
@@ -128,8 +128,8 @@ func _forward_search(start_state: Dictionary, goal_state: Dictionary, all_action
 	return []
 
 
-func _get_applicable_actions(world_state: Dictionary, allowed_actions: Array) -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
+func _get_applicable_actions(world_state: WorldState, allowed_actions: Array) -> Array:
+	var result: Array = []
 	for action in _actions:
 		if not allowed_actions.is_empty():
 			if not action["name"] in allowed_actions:
@@ -147,12 +147,12 @@ func _get_action_by_name(action_name: String) -> Dictionary:
 	return {}
 
 
-func _state_to_key(state: Dictionary) -> String:
-	var keys := state.keys()
+func _state_to_key(state: WorldState) -> String:
+	var keys := state.get_field_keys()
 	keys.sort()
 	var parts: PackedStringArray = []
 	for key in keys:
-		parts.append("%s=%s" % [key, state[key]])
+		parts.append("%s=%s" % [key, state.get_field(key)])
 	return "|".join(parts)
 
 

@@ -12,7 +12,6 @@ var _blackboard: Node = null
 
 func _ready() -> void:
 	_load_thresholds()
-	_setup_trigger_zone()
 	_blackboard = $Blackboard
 	_setup_blackboard_cleanup()
 
@@ -20,18 +19,14 @@ func _ready() -> void:
 func _load_thresholds() -> void:
 	var data: Dictionary = ConfigLoader.load_dict("res://configs/nest.json")
 	_thresholds = data.get("thresholds", {})
+	_setup_trigger_zone(data.get("triggerZoneRadius", 50.0))
 
 
-func _setup_trigger_zone() -> void:
-	var area := Area2D.new()
-	area.name = "TriggerZone"
-	var shape := CollisionShape2D.new()
-	var circle := CircleShape2D.new()
-	circle.radius = 50.0
-	shape.shape = circle
-	area.add_child(shape)
-	area.position = Vector2.ZERO
-	add_child(area)
+func _setup_trigger_zone(radius: float) -> void:
+	var zone: Area2D = $TriggerZone
+	var shape: CollisionShape2D = zone.get_node_or_null("TriggerShape")
+	if shape and shape.shape:
+		(shape.shape as CircleShape2D).radius = radius
 
 
 func deposit(resource_type: String, amount: int) -> void:

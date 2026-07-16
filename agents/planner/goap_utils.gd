@@ -2,15 +2,9 @@ class_name GoapUtils
 extends Node
 
 
-static func state_satisfies(state: Dictionary, preconditions: Dictionary) -> bool:
-	for key in preconditions:
-		if not state.has(key) or state[key] != preconditions[key]:
-			return false
-	return true
+static func state_satisfies(state: WorldState, preconditions: Dictionary) -> bool:
+	return state.satisfies(preconditions)
 
 
-static func merge_states(base: Dictionary, overrides: Dictionary) -> Dictionary:
-	var result := base.duplicate()
-	for key in overrides:
-		result[key] = overrides[key]
-	return result
+static func merge_states(base: WorldState, overrides: Dictionary) -> WorldState:
+	return base.merge(overrides)

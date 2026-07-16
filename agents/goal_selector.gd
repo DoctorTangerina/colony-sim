@@ -22,7 +22,7 @@ func get_role_component() -> Node:
 	return _role_component
 
 
-func select_goal(world_state: Dictionary) -> Dictionary:
+func select_goal(world_state: WorldState) -> Dictionary:
 	var candidates := _get_achievable_goals(world_state)
 	if candidates.is_empty():
 		return {}
@@ -37,11 +37,11 @@ func select_goal(world_state: Dictionary) -> Dictionary:
 	return best
 
 
-func get_available_goals(world_state: Dictionary) -> Array[Dictionary]:
+func get_available_goals(world_state: WorldState) -> Array[Dictionary]:
 	return _get_achievable_goals(world_state)
 
 
-func _get_achievable_goals(world_state: Dictionary) -> Array[Dictionary]:
+func _get_achievable_goals(world_state: WorldState) -> Array[Dictionary]:
 	var allowed_goals: Array = []
 	if _role_component and _role_component.has_method("get_allowed_goals"):
 		allowed_goals = _role_component.get_allowed_goals()
@@ -65,7 +65,7 @@ func _get_achievable_goals(world_state: Dictionary) -> Array[Dictionary]:
 	return result
 
 
-func _score_goal(goal: Dictionary, _world_state: Dictionary) -> float:
+func _score_goal(goal: Dictionary, _world_state: WorldState) -> float:
 	var base_desirability: float = goal.get("desirability", 1.0)
 	var modifier := 1.0
 	if _role_component and _role_component.has_method("get_priority_modifier"):
