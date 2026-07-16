@@ -207,20 +207,18 @@ func _test_move_to_uses_known_food_position() -> void:
 	agent.set("energy", 100.0)
 	agent.set("hunger", 0.0)
 	agent.set("nest_ref", null)
-	agent.set("known_food_positions", {"Food": [Vector2(400, 500)]})
-	agent.set("known_wood_positions", {})
 
 	var move_called := false
 	var move_target := Vector2.ZERO
 	var agent_script2 = GDScript.new()
-	agent_script2.source_code = """extends CharacterBody2D
+	agent_script2.source_code = """extends IAgentActions
 
 var agent_id: String = "test"
 var held_item: String = "None"
 var energy: float = 100.0
 var hunger: float = 0.0
 var nest_ref = null
-var known_food_positions: Dictionary = {}
+var known_food_positions: Dictionary = {"Food": [Vector2(400, 500)]}
 var known_wood_positions: Dictionary = {}
 var _move_called: bool = false
 var _move_target: Vector2 = Vector2.ZERO
@@ -236,11 +234,15 @@ func get_nest_position() -> Vector2:
 
 func complete_action() -> void:
 	pass
+
+func get_known_positions() -> Dictionary:
+	var merged := known_food_positions.duplicate()
+	for key in known_wood_positions:
+		merged[key] = known_wood_positions[key]
+	return merged
 """
 	agent_script2.reload()
 	agent.set_script(agent_script2)
-	agent.set("known_food_positions", {"Food": [Vector2(400, 500)]})
-	agent.set("known_wood_positions", {})
 	agent.set("nest_ref", null)
 
 	GoapActionExecutor.execute_action("MoveTo", agent)
@@ -263,7 +265,7 @@ func _test_pickup_food_uses_known_position_fallback() -> void:
 	var node = _make_mock_resource_node("Food", known_pos)
 	var rm = _make_mock_resource_manager([node])
 	agent.set("resource_manager_ref", rm)
-	agent.set("known_food_positions", {"Food": [known_pos]})
+	agent.set("_known_positions", {"Food": [known_pos]})
 
 	GoapActionExecutor.execute_action("PickupFood", agent)
 	_assert(agent.get("target_resource") != null, "Target resource set from known position")
@@ -286,7 +288,7 @@ func _test_agent_world_state_reads_blackboard() -> void:
 
 	var world_state = agent._build_world_state()
 	_assert(world_state.get("known_food_position") == true, "known_food_position is true from blackboard")
-	_assert(agent.get("known_food_positions").has("Food"), "Agent has known_food_positions from blackboard")
+	_assert(agent.get_known_positions().has("Food"), "Agent has known positions from blackboard")
 
 
 func _test_nest_periodic_cleanup() -> void:

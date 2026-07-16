@@ -2,7 +2,7 @@ class_name GoapActionExecutor
 extends Node
 
 
-static func execute_action(action_name: String, agent) -> void:
+static func execute_action(action_name: String, agent: IAgentActions) -> void:
 	match action_name:
 		GoapActions.EAT:
 			agent.reduce_hunger(40.0)
@@ -35,52 +35,32 @@ static func execute_action(action_name: String, agent) -> void:
 			agent.complete_action()
 
 
-static func _pickup_resource(resource_type: String, agent) -> void:
+static func _pickup_resource(resource_type: String, agent: IAgentActions) -> void:
 	var node: Node = agent.get_nearest_resource(agent.get_agent_position(), resource_type)
 	if node and is_instance_valid(node):
 		agent.set_target_resource(node)
 		agent.move_to(node.global_position)
 		return
-	var known_key: String = "known_%s_positions" % resource_type.to_lower()
-	var known_positions = agent.get(known_key)
-	if known_positions is Dictionary and known_positions.has(resource_type) and known_positions[resource_type].size() > 0:
-		var target_pos: Vector2 = known_positions[resource_type][0]
-		var rm = agent.get("resource_manager_ref")
-		if rm and rm.has_method("resource_exists_at") and rm.resource_exists_at(resource_type, target_pos):
-			var mock_node = GDScript.new()
-			mock_node.source_code = """extends Node
-var resource_type: String = ""
-var global_position: Vector2 = Vector2.ZERO
-var remaining_amount: int = 100
-func extract(amount: int) -> int:
-	var actual = mini(amount, remaining_amount)
-	remaining_amount -= actual
-	return actual
-"""
-			mock_node.reload()
-			var resource_node = mock_node.new()
-			resource_node.set("resource_type", resource_type)
-			resource_node.set("global_position", target_pos)
-			agent.set_target_resource(resource_node)
-			agent.move_to(target_pos)
-			return
+	var known_positions: Dictionary = agent.get_known_positions()
+	if known_positions.has(resource_type) and known_positions[resource_type].size() > 0:
+		agent.move_to(known_positions[resource_type][0])
+		return
 	agent.complete_action()
 
 
-static func _move_to_best_target(agent) -> void:
-	var known_food = agent.get("known_food_positions")
-	var known_wood = agent.get("known_wood_positions")
+static func _move_to_best_target(agent: IAgentActions) -> void:
+	var known_positions: Dictionary = agent.get_known_positions()
 
-	if known_food is Dictionary and known_food.has("Food") and known_food["Food"].size() > 0:
-		agent.move_to(known_food["Food"][0])
+	if known_positions.has("Food") and known_positions["Food"].size() > 0:
+		agent.move_to(known_positions["Food"][0])
 		return
-	if known_wood is Dictionary and known_wood.has("Wood") and known_wood["Wood"].size() > 0:
-		agent.move_to(known_wood["Wood"][0])
+	if known_positions.has("Wood") and known_positions["Wood"].size() > 0:
+		agent.move_to(known_positions["Wood"][0])
 		return
 	agent.move_to(agent.get_nest_position())
 
 
-static func _explore(agent) -> void:
+static func _explore(agent: IAgentActions) -> void:
 	var bounds: Rect2 = agent.get_world_bounds()
 	var random_pos := Vector2(
 		randf_range(bounds.position.x, bounds.position.x + bounds.size.x),
@@ -89,7 +69,7 @@ static func _explore(agent) -> void:
 	agent.move_to(random_pos)
 
 
-static func _patrol(agent) -> void:
+static func _patrol(agent: IAgentActions) -> void:
 	var nest_pos: Vector2 = agent.get_nest_position()
 	if nest_pos != Vector2.ZERO:
 		var offset := Vector2(randf_range(-80.0, 80.0), randf_range(-80.0, 80.0))
@@ -98,6 +78,9 @@ static func _patrol(agent) -> void:
 		agent.complete_action()
 
 
+## Left untyped/untouched: blackboard + discovery scope-creep slated for full
+## removal by Ticket 14 (goap-role-system-review). Narrowing it to
+## IAgentActions now would be wasted effort on code about to be deleted.
 static func _report_resource(agent) -> void:
 	var res_type: String = agent.get("discovered_resource_type")
 	var res_pos: Vector2 = agent.get("discovered_resource_pos")
