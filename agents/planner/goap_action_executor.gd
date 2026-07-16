@@ -1,38 +1,64 @@
 class_name GoapActionExecutor
 extends Node
 
+## Actions not present here (e.g. LayReturnPheromone, FollowPheromone,
+## AttackTarget) fall through to _default_handler, which just completes the
+## action. Register an entry only when an action needs bespoke behavior -
+## most new actions need none, keeping executor edits off the "adding an
+## action" checklist entirely.
+static var _registry: Dictionary = {}
+
 
 static func execute_action(action_name: String, agent: IAgentActions) -> void:
-	match action_name:
-		GoapActions.EAT:
-			agent.reduce_hunger(40.0)
-			agent.complete_action()
-		GoapActions.REST:
-			agent.restore_energy(40.0)
-			agent.complete_action()
-		GoapActions.RETURN_TO_NEST:
-			agent.move_to(agent.get_nest_position())
-		GoapActions.MOVE_TO:
-			_move_to_best_target(agent)
-		GoapActions.PICKUP_FOOD:
-			_pickup_resource("Food", agent)
-		GoapActions.PICKUP_WOOD:
-			_pickup_resource("Wood", agent)
-		GoapActions.DEPOSIT_RESOURCE:
-			agent.deposit_at_nest(agent.get_held_item())
-			agent.complete_action()
-		GoapActions.RANDOM_EXPLORE:
-			_explore(agent)
-		GoapActions.PATROL_NEST:
-			_patrol(agent)
-		GoapActions.LAY_RETURN_PHEROMONE, GoapActions.LAY_RESOURCE_PHEROMONE, GoapActions.FOLLOW_PHEROMONE:
-			agent.complete_action()
-		GoapActions.REPORT_RESOURCE:
-			_report_resource(agent)
-		GoapActions.ATTACK_TARGET:
-			agent.complete_action()
-		_:
-			agent.complete_action()
+	_ensure_registry()
+	var handler: Callable = _registry.get(action_name, _default_handler)
+	handler.call(agent)
+
+
+static func _ensure_registry() -> void:
+	if not _registry.is_empty():
+		return
+	_registry[GoapActions.EAT] = _eat
+	_registry[GoapActions.REST] = _rest
+	_registry[GoapActions.RETURN_TO_NEST] = _return_to_nest
+	_registry[GoapActions.MOVE_TO] = _move_to_best_target
+	_registry[GoapActions.PICKUP_FOOD] = _pickup_food
+	_registry[GoapActions.PICKUP_WOOD] = _pickup_wood
+	_registry[GoapActions.DEPOSIT_RESOURCE] = _deposit_resource
+	_registry[GoapActions.RANDOM_EXPLORE] = _explore
+	_registry[GoapActions.PATROL_NEST] = _patrol
+	_registry[GoapActions.REPORT_RESOURCE] = _report_resource
+
+
+static func _default_handler(agent: IAgentActions) -> void:
+	agent.complete_action()
+
+
+static func _eat(agent: IAgentActions) -> void:
+	agent.reduce_hunger(40.0)
+	agent.complete_action()
+
+
+static func _rest(agent: IAgentActions) -> void:
+	agent.restore_energy(40.0)
+	agent.complete_action()
+
+
+static func _return_to_nest(agent: IAgentActions) -> void:
+	agent.move_to(agent.get_nest_position())
+
+
+static func _pickup_food(agent: IAgentActions) -> void:
+	_pickup_resource("Food", agent)
+
+
+static func _pickup_wood(agent: IAgentActions) -> void:
+	_pickup_resource("Wood", agent)
+
+
+static func _deposit_resource(agent: IAgentActions) -> void:
+	agent.deposit_at_nest(agent.get_held_item())
+	agent.complete_action()
 
 
 static func _pickup_resource(resource_type: String, agent: IAgentActions) -> void:
