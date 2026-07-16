@@ -1,5 +1,12 @@
 {
   "enableEnemies": true,
   "enableDynamicRoles": true,
-  "simulationSpeed": 1.0
+  "simulationSpeed": 1.0,
+  "roleEvalInterval": 1.0,
+  "roleCooldown": 10.0,
+  "mapMinX": 32,
+  "mapMinY": 32,
+  "mapMaxX": 1120,
+  "mapMaxY": 616,
+  "discoveryRadius": 50.0
 }

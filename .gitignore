@@ -1,3 +1,9 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# agent files
+docs/*
+.scratch/*
+AGENTS.md
+CONTEXT.md
