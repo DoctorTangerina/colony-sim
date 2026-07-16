@@ -17,9 +17,7 @@ func _ready() -> void:
 func _load_config() -> void:
 	var data: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
 	if not data.has("mapMinX") or not data.has("mapMinY") or not data.has("mapMaxX") or not data.has("mapMaxY"):
-		push_error("resource_manager: simulation.json missing map bounds (mapMinX, mapMinY, mapMaxX, mapMaxY), using defaults")
-		_map_min = Vector2(32, 32)
-		_map_max = Vector2(1120, 616)
+		push_error("resource_manager: simulation.json missing map bounds (mapMinX, mapMinY, mapMaxX, mapMaxY)")
 		return
 	_map_min = Vector2(data["mapMinX"], data["mapMinY"])
 	_map_max = Vector2(data["mapMaxX"], data["mapMaxY"])
