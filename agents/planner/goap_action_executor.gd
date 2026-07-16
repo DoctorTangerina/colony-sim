@@ -78,9 +78,9 @@ static func _patrol(agent: IAgentActions) -> void:
 		agent.complete_action()
 
 
-## Left untyped/untouched: blackboard + discovery scope-creep slated for full
-## removal by Ticket 14 (goap-role-system-review). Narrowing it to
-## IAgentActions now would be wasted effort on code about to be deleted.
+## Left untyped/untouched: writes directly to the Blackboard node rather than
+## going through IAgentActions, since ReportResource is the sole write path
+## and narrowing it would just relocate the same two has_method() checks.
 static func _report_resource(agent) -> void:
 	var res_type: String = agent.get("discovered_resource_type")
 	var res_pos: Vector2 = agent.get("discovered_resource_pos")

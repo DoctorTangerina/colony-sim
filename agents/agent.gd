@@ -163,14 +163,7 @@ func _build_world_state() -> WorldState:
 						break
 
 		if blackboard and blackboard.has_method("get_entries"):
-			_known_positions = {}
-			for res_type in ["Food", "Wood"]:
-				var entries = blackboard.get_entries(res_type)
-				for entry in entries:
-					var entry_pos: Vector2 = entry["position"]
-					if resource_manager_ref.resource_exists_at(res_type, entry_pos):
-						_known_positions[res_type] = _known_positions.get(res_type, [])
-						_known_positions[res_type].append(entry_pos)
+			_known_positions = BlackboardSync.sync_known_positions(blackboard, resource_manager_ref)
 
 	var has_known_food: bool = _known_positions.has("Food")
 	var has_known_wood: bool = _known_positions.has("Wood")
