@@ -8,7 +8,9 @@ static func build(
 	at_nest: bool,
 	food_visible: bool,
 	wood_visible: bool,
-	near_unreported_resource: bool = false
+	near_unreported_resource: bool = false,
+	known_food_position: bool = false,
+	known_wood_position: bool = false
 ) -> Dictionary:
 	return {
 		"at_nest": at_nest,
@@ -21,5 +23,7 @@ static func build(
 		"wood_visible": wood_visible,
 		"resource_visible": food_visible or wood_visible,
 		"enemy_near": false,
-		"near_unreported_resource": near_unreported_resource
+		"near_unreported_resource": near_unreported_resource,
+		"known_food_position": known_food_position,
+		"known_wood_position": known_wood_position
 	}

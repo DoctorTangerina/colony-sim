@@ -29,6 +29,8 @@ var _agent_speed: float = 200.0
 var _discovery_radius: float = 50.0
 var discovered_resource_type: String = ""
 var discovered_resource_pos: Vector2 = Vector2.ZERO
+var known_food_positions: Dictionary = {}
+var known_wood_positions: Dictionary = {}
 
 var _map_min := Vector2(32, 32)
 var _map_max := Vector2(1120, 616)
@@ -178,7 +180,25 @@ func _build_world_state() -> Dictionary:
 							discovered_resource_pos = res_node.global_position
 						break
 
-	return WorldStateBuilder.build(held_item, energy, hunger, at_nest, food_visible, wood_visible, near_unreported)
+		if blackboard and blackboard.has_method("get_entries"):
+			known_food_positions = {}
+			known_wood_positions = {}
+			for res_type in ["Food", "Wood"]:
+				var entries = blackboard.get_entries(res_type)
+				for entry in entries:
+					var entry_pos: Vector2 = entry["position"]
+					if resource_manager_ref.resource_exists_at(res_type, entry_pos):
+						if res_type == "Food":
+							known_food_positions[res_type] = known_food_positions.get(res_type, [])
+							known_food_positions[res_type].append(entry_pos)
+						else:
+							known_wood_positions[res_type] = known_wood_positions.get(res_type, [])
+							known_wood_positions[res_type].append(entry_pos)
+
+	var has_known_food: bool = not known_food_positions.is_empty()
+	var has_known_wood: bool = not known_wood_positions.is_empty()
+
+	return WorldStateBuilder.build(held_item, energy, hunger, at_nest, food_visible, wood_visible, near_unreported, has_known_food, has_known_wood)
 
 
 func _execute_current_action() -> void:

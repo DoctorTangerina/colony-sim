@@ -87,3 +87,12 @@ func get_nearest_resource(from_position: Vector2, resource_type: String) -> Reso
 
 func get_all_resources() -> Array[ResourceNode]:
 	return active_nodes.duplicate()
+
+
+func resource_exists_at(resource_type: String, position: Vector2) -> bool:
+	for node in active_nodes:
+		if node.resource_type != resource_type or not is_instance_valid(node):
+			continue
+		if position.distance_to(node.global_position) < 50.0:
+			return true
+	return false

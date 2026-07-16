@@ -14,6 +14,7 @@ func _ready() -> void:
 	_load_thresholds()
 	_setup_trigger_zone()
 	_blackboard = $Blackboard
+	_setup_blackboard_cleanup()
 
 
 func _load_thresholds() -> void:
@@ -88,3 +89,20 @@ func get_trigger_zone() -> Area2D:
 
 func get_blackboard() -> Node:
 	return _blackboard
+
+
+func _setup_blackboard_cleanup() -> void:
+	var timer := Timer.new()
+	timer.name = "BlackboardCleanupTimer"
+	timer.wait_time = 5.0
+	timer.autostart = true
+	timer.timeout.connect(_on_blackboard_cleanup_timeout)
+	add_child(timer)
+
+
+func _on_blackboard_cleanup_timeout() -> void:
+	if _blackboard == null:
+		return
+	var rm = get_node_or_null("/root/Simulation/ResourceManager")
+	if rm and _blackboard.has_method("clean_stale_entries"):
+		_blackboard.clean_stale_entries(rm)

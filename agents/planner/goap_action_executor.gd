@@ -13,7 +13,7 @@ static func execute_action(action_name: String, agent) -> void:
 		GoapActions.RETURN_TO_NEST:
 			agent.move_to(agent.get_nest_position())
 		GoapActions.MOVE_TO:
-			agent.move_to(agent.get_nest_position())
+			_move_to_best_target(agent)
 		GoapActions.PICKUP_FOOD:
 			_pickup_resource("Food", agent)
 		GoapActions.PICKUP_WOOD:
@@ -41,7 +41,43 @@ static func _pickup_resource(resource_type: String, agent) -> void:
 		agent.set_target_resource(node)
 		agent.move_to(node.global_position)
 		return
+	var known_key: String = "known_%s_positions" % resource_type.to_lower()
+	var known_positions = agent.get(known_key)
+	if known_positions is Dictionary and known_positions.has(resource_type) and known_positions[resource_type].size() > 0:
+		var target_pos: Vector2 = known_positions[resource_type][0]
+		var rm = agent.get("resource_manager_ref")
+		if rm and rm.has_method("resource_exists_at") and rm.resource_exists_at(resource_type, target_pos):
+			var mock_node = GDScript.new()
+			mock_node.source_code = """extends Node
+var resource_type: String = ""
+var global_position: Vector2 = Vector2.ZERO
+var remaining_amount: int = 100
+func extract(amount: int) -> int:
+	var actual = mini(amount, remaining_amount)
+	remaining_amount -= actual
+	return actual
+"""
+			mock_node.reload()
+			var resource_node = mock_node.new()
+			resource_node.set("resource_type", resource_type)
+			resource_node.set("global_position", target_pos)
+			agent.set_target_resource(resource_node)
+			agent.move_to(target_pos)
+			return
 	agent.complete_action()
+
+
+static func _move_to_best_target(agent) -> void:
+	var known_food = agent.get("known_food_positions")
+	var known_wood = agent.get("known_wood_positions")
+
+	if known_food is Dictionary and known_food.has("Food") and known_food["Food"].size() > 0:
+		agent.move_to(known_food["Food"][0])
+		return
+	if known_wood is Dictionary and known_wood.has("Wood") and known_wood["Wood"].size() > 0:
+		agent.move_to(known_wood["Wood"][0])
+		return
+	agent.move_to(agent.get_nest_position())
 
 
 static func _explore(agent) -> void:
