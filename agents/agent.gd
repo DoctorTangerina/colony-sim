@@ -27,6 +27,8 @@ var _planning_interval: float = 2.0
 var _planning_timer: float = 0.0
 var _agent_speed: float = 200.0
 var _discovery_radius: float = 50.0
+var discovered_resource_type: String = ""
+var discovered_resource_pos: Vector2 = Vector2.ZERO
 
 var _map_min := Vector2(32, 32)
 var _map_max := Vector2(1120, 616)
@@ -171,6 +173,9 @@ func _build_world_state() -> Dictionary:
 				if is_instance_valid(res_node) and global_position.distance_to(res_node.global_position) < _discovery_radius:
 					if not blackboard.has_entry_at(res_node.resource_type, res_node.global_position):
 						near_unreported = true
+						if discovered_resource_type.is_empty():
+							discovered_resource_type = res_node.resource_type
+							discovered_resource_pos = res_node.global_position
 						break
 
 	return WorldStateBuilder.build(held_item, energy, hunger, at_nest, food_visible, wood_visible, near_unreported)
@@ -273,6 +278,11 @@ func restore_energy(amount: float) -> void:
 
 func complete_action() -> void:
 	action_completed.emit()
+
+
+func clear_discovered_resource() -> void:
+	discovered_resource_type = ""
+	discovered_resource_pos = Vector2.ZERO
 
 
 func get_world_bounds() -> Rect2:

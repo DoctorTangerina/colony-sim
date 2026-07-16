@@ -1,3 +1,4 @@
+class_name Blackboard
 extends Node
 
 signal entries_changed(entries: Array[Dictionary])
