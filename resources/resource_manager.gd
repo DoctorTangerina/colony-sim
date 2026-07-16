@@ -4,25 +4,24 @@ var resource_definitions: Dictionary = {}
 var active_nodes: Array[ResourceNode] = []
 
 const RESOURCE_SCENE: PackedScene = preload("res://resources/resource_node.tscn")
-const MAP_MIN := Vector2(32, 32)
-const MAP_MAX := Vector2(1120, 616)
+
+var _map_min := Vector2(32, 32)
+var _map_max := Vector2(1120, 616)
 
 func _ready() -> void:
+	_load_config()
 	_load_definitions()
 	await get_tree().create_timer(0.1).timeout
 	_spawn_initial_nodes()
 
+func _load_config() -> void:
+	var data: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
+	_map_min = Vector2(data.get("mapMinX", 32), data.get("mapMinY", 32))
+	_map_max = Vector2(data.get("mapMaxX", 1120), data.get("mapMaxY", 616))
+
 func _load_definitions() -> void:
-	var file := FileAccess.open("res://configs/resources.json", FileAccess.READ)
-	if file == null:
-		push_error("ResourceManager: Could not open configs/resources.json")
-		return
-	var json := JSON.new()
-	var err := json.parse(file.get_as_text())
-	if err != OK:
-		push_error("ResourceManager: JSON parse error: " + json.get_error_message())
-		return
-	for entry in json.data:
+	var entries: Array = ConfigLoader.load_array("res://configs/resources.json")
+	for entry in entries:
 		resource_definitions[entry["type"]] = entry
 
 func _spawn_initial_nodes() -> void:
@@ -30,12 +29,17 @@ func _spawn_initial_nodes() -> void:
 		_spawn_node(type_name)
 
 func _get_random_position() -> Vector2:
-	var pos := Vector2(
-		randf_range(MAP_MIN.x, MAP_MAX.x),
-		randf_range(MAP_MIN.y, MAP_MAX.y)
-	)
 	var nav_map: RID = get_tree().root.get_world_2d().navigation_map
-	return NavigationServer2D.map_get_closest_point(nav_map, pos)
+	for _attempt in range(10):
+		var pos := Vector2(
+			randf_range(_map_min.x, _map_max.x),
+			randf_range(_map_min.y, _map_max.y)
+		)
+		var snapped := NavigationServer2D.map_get_closest_point(nav_map, pos)
+		if snapped.distance_to(pos) < 50.0:
+			return snapped
+	var center := (_map_min + _map_max) * 0.5
+	return NavigationServer2D.map_get_closest_point(nav_map, center)
 
 func _spawn_node(resource_type: String) -> ResourceNode:
 	var def: Dictionary = resource_definitions.get(resource_type, {})
@@ -79,3 +83,7 @@ func get_nearest_resource(from_position: Vector2, resource_type: String) -> Reso
 			nearest_dist = dist
 			nearest = node
 	return nearest
+
+
+func get_all_resources() -> Array[ResourceNode]:
+	return active_nodes.duplicate()
