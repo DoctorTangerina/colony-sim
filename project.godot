@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="SMAS"
-run/main_scene="res://simulation/Simulation.tscn"
+run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+OrganizationManager="*res://organization/organization_manager.gd"
 
 [display]
 

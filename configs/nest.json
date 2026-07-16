@@ -1,0 +1,6 @@
+{
+  "thresholds": {
+    "Food": { "low": 10, "abundant": 50 },
+    "Wood": { "low": 10, "abundant": 50 }
+  }
+}

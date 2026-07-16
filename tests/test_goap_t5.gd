@@ -39,6 +39,10 @@ func _test_target_distribution_low_food() -> void:
 	om.register_agent("a2", "Explorer")
 	om.register_agent("a3", "Guard")
 
+	om._get_role_def("Gatherer")
+	om._get_role_def("Explorer")
+	om._get_role_def("Guard")
+
 	var target = om._compute_target_distribution(5, 50, 3)
 	_assert(target.get("Gatherer", 0) >= 1, "Low food produces Gatherer request (got %d)" % target.get("Gatherer", 0))
 
@@ -50,6 +54,10 @@ func _test_target_distribution_abundant() -> void:
 	add_child(om)
 	om.register_agent("a1", "Gatherer")
 
+	om._get_role_def("Gatherer")
+	om._get_role_def("Explorer")
+	om._get_role_def("Guard")
+
 	var target = om._compute_target_distribution(60, 60, 1)
 	_assert(target.get("Explorer", 0) >= 1, "Abundant resources produce Explorer request (got %d)" % target.get("Explorer", 0))
 
@@ -59,6 +67,10 @@ func _test_target_distribution_balanced() -> void:
 	var om_script = preload("res://organization/organization_manager.gd")
 	var om = om_script.new()
 	add_child(om)
+
+	om._get_role_def("Gatherer")
+	om._get_role_def("Explorer")
+	om._get_role_def("Guard")
 
 	var target = om._compute_target_distribution(30, 30, 4)
 	var total_requests := 0
@@ -77,6 +89,10 @@ func _test_om_evaluation_posts_requests() -> void:
 	var nest_script = preload("res://organization/nest.gd")
 	var nest = nest_script.new()
 	add_child(nest)
+
+	om._get_role_def("Gatherer")
+	om._get_role_def("Explorer")
+	om._get_role_def("Guard")
 
 	om.setup(nest)
 	om.register_agent("a1", "Explorer")
@@ -97,6 +113,10 @@ func _test_om_evaluation_clears_excess() -> void:
 	var nest_script = preload("res://organization/nest.gd")
 	var nest = nest_script.new()
 	add_child(nest)
+
+	om._get_role_def("Gatherer")
+	om._get_role_def("Explorer")
+	om._get_role_def("Guard")
 
 	om.setup(nest)
 	om.register_agent("a1", "Gatherer")
@@ -138,6 +158,10 @@ func _test_unassigned_counts_in_denominator() -> void:
 	var om_script = preload("res://organization/organization_manager.gd")
 	var om = om_script.new()
 	add_child(om)
+
+	om._get_role_def("Gatherer")
+	om._get_role_def("Explorer")
+	om._get_role_def("Guard")
 
 	om.register_agent("a1", "Unassigned")
 	om.register_agent("a2", "Unassigned")
