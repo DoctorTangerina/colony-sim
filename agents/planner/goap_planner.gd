@@ -63,7 +63,7 @@ func cancel_plan() -> void:
 func validate_plan(plan: Array, world_state: WorldState) -> bool:
 	if plan.is_empty():
 		return false
-	var state := world_state.duplicate()
+	var state := world_state.clone()
 	for action_name in plan:
 		var action := _get_action_by_name(action_name)
 		if action.is_empty():
@@ -79,7 +79,7 @@ func _forward_search(start_state: WorldState, goal_state: Dictionary, all_action
 	var visited: Dictionary = {}
 
 	var start_node := {
-		"state": start_state.duplicate(),
+		"state": start_state.clone(),
 		"plan": [],
 		"cost": 0.0
 	}

@@ -197,11 +197,20 @@ func _on_arrived_at_target() -> void:
 func _on_action_completed() -> void:
 	_action_in_progress = false
 	_action_index += 1
-	if _action_index < current_plan.size():
-		_execute_current_action()
-	else:
+
+	if _action_index >= current_plan.size():
 		current_plan = []
 		current_goal = ""
+		return
+
+	var remaining_plan: Array = current_plan.slice(_action_index)
+	if not _planner.validate_plan(remaining_plan, _build_world_state()):
+		current_plan = []
+		current_goal = ""
+		_run_planning_cycle()
+		return
+
+	_execute_current_action()
 
 
 func _on_role_changed(_agent_id: String, _old_role: String, _new_role: String) -> void:

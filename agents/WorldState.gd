@@ -52,10 +52,20 @@ func satisfies(preconditions: Dictionary) -> bool:
 
 
 func merge(effects: Dictionary) -> WorldState:
-	var new_state := duplicate() as WorldState
+	var new_state := clone()
 	for key in effects:
 		if key in new_state.get_field_keys():
 			new_state.set_field(key, effects[key])
+	return new_state
+
+
+# Resource.duplicate() only copies properties with PROPERTY_USAGE_STORAGE;
+# plain (non-@export) script vars don't get that flag, so it silently
+# returns an all-defaults copy. Use this instead of duplicate() everywhere.
+func clone() -> WorldState:
+	var new_state := WorldState.new()
+	for key in get_field_keys():
+		new_state.set_field(key, get_field(key))
 	return new_state
 
 
