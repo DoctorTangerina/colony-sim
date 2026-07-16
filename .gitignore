@@ -5,6 +5,8 @@
 # agent files
 docs/*
 .scratch/*
+.claude/*
 AGENTS.md
 CONTEXT.md
 CODE_REVIEW.md
+tickets.md
