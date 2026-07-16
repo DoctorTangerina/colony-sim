@@ -86,8 +86,7 @@ func _test_om_evaluation_posts_requests() -> void:
 	var om = om_script.new()
 	add_child(om)
 
-	var nest_script = preload("res://organization/nest.gd")
-	var nest = nest_script.new()
+	var nest = preload("res://organization/Nest.tscn").instantiate()
 	add_child(nest)
 
 	om._get_role_def("Gatherer")
@@ -110,8 +109,7 @@ func _test_om_evaluation_clears_excess() -> void:
 	var om = om_script.new()
 	add_child(om)
 
-	var nest_script = preload("res://organization/nest.gd")
-	var nest = nest_script.new()
+	var nest = preload("res://organization/Nest.tscn").instantiate()
 	add_child(nest)
 
 	om._get_role_def("Gatherer")
@@ -142,8 +140,7 @@ func _test_dynamic_roles_disabled() -> void:
 	om.set_dynamic_roles(false)
 	om.register_agent("a1", "Explorer")
 
-	var nest_script = preload("res://organization/nest.gd")
-	var nest = nest_script.new()
+	var nest = preload("res://organization/Nest.tscn").instantiate()
 	add_child(nest)
 	om.setup(nest)
 
@@ -167,8 +164,7 @@ func _test_unassigned_counts_in_denominator() -> void:
 	om.register_agent("a2", "Unassigned")
 	om.register_agent("a3", "Unassigned")
 
-	var nest_script = preload("res://organization/nest.gd")
-	var nest = nest_script.new()
+	var nest = preload("res://organization/Nest.tscn").instantiate()
 	add_child(nest)
 	om.setup(nest)
 

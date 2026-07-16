@@ -114,13 +114,7 @@ func _make_mock_agent() -> Node:
 
 
 func _make_mock_nest_with_blackboard() -> Node:
-	var BlackboardScript = preload("res://organization/blackboard.gd")
-	var nest_script = preload("res://organization/nest.gd")
-	var nest = nest_script.new()
-	var bb = BlackboardScript.new()
-	bb.name = "Blackboard"
-	nest.add_child(bb)
-	nest.set("_blackboard", bb)
+	var nest = preload("res://organization/Nest.tscn").instantiate()
 	add_child(nest)
 	return nest
 
@@ -301,8 +295,7 @@ func _test_agent_world_state_reads_blackboard() -> void:
 
 func _test_nest_periodic_cleanup() -> void:
 	print("[Test] Nest has blackboard_periodic_cleanup timer")
-	var nest_script = preload("res://organization/nest.gd")
-	var nest = nest_script.new()
+	var nest = preload("res://organization/Nest.tscn").instantiate()
 	add_child(nest)
 	var has_timer = false
 	for child in nest.get_children():

@@ -54,13 +54,7 @@ func _make_mock_agent() -> Node:
 
 
 func _make_mock_nest_with_blackboard() -> Node:
-	var BlackboardScript = preload("res://organization/blackboard.gd")
-	var nest_script = preload("res://organization/nest.gd")
-	var nest = nest_script.new()
-	var bb = BlackboardScript.new()
-	bb.name = "Blackboard"
-	nest.add_child(bb)
-	nest.set("_blackboard", bb)
+	var nest = preload("res://organization/Nest.tscn").instantiate()
 	add_child(nest)
 	return nest
 

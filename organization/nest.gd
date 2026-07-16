@@ -19,14 +19,10 @@ func _ready() -> void:
 func _load_thresholds() -> void:
 	var data: Dictionary = ConfigLoader.load_dict("res://configs/nest.json")
 	_thresholds = data.get("thresholds", {})
-	_setup_trigger_zone(data.get("triggerZoneRadius", 50.0))
-
-
-func _setup_trigger_zone(radius: float) -> void:
 	var zone: Area2D = $TriggerZone
-	var shape: CollisionShape2D = zone.get_node_or_null("TriggerShape")
+	var shape: CollisionShape2D = zone.get_node_or_null("CollisionShape2D")
 	if shape and shape.shape:
-		(shape.shape as CircleShape2D).radius = radius
+		(shape.shape as CircleShape2D).radius = data.get("triggerZoneRadius", 50.0)
 
 
 func deposit(resource_type: String, amount: int) -> void:

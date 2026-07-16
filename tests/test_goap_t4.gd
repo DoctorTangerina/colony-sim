@@ -115,8 +115,7 @@ func _test_om_death_counter() -> void:
 
 func _test_nest_deposit() -> void:
 	print("[Test] Nest deposit and storage")
-	var nest_script = preload("res://organization/nest.gd")
-	var nest = nest_script.new()
+	var nest = preload("res://organization/Nest.tscn").instantiate()
 	add_child(nest)
 
 	nest.deposit("Food", 5)
@@ -129,8 +128,7 @@ func _test_nest_deposit() -> void:
 
 func _test_nest_thresholds() -> void:
 	print("[Test] Nest threshold signals")
-	var nest_script = preload("res://organization/nest.gd")
-	var nest = nest_script.new()
+	var nest = preload("res://organization/Nest.tscn").instantiate()
 	add_child(nest)
 
 	var results := {"low_received": false, "abundant_received": false, "low_type": "", "abundant_type": ""}
