@@ -297,4 +297,4 @@ func get_role_component() -> Node:
 
 
 func _get_om():
-	return get_node_or_null("/root/OrganizationManager")
+	return get_node("/root/OrganizationManager")
