@@ -1,6 +1,24 @@
 class_name WorldState
 extends Resource
 
+## World-state schema. This is the full set of flags a goal/action
+## precondition or effect (configs/goals, configs/actions) may reference -
+## satisfies() and merge() silently ignore any key not listed here, so an
+## undocumented flag in a config file is a silent no-op, not an error.
+##
+## - at_nest (bool): agent is within nest interaction range.
+## - has_food (bool): agent's held item is "Food".
+## - has_wood (bool): agent's held item is "Wood".
+## - has_item (bool): agent is holding "Food" or "Wood" (held item != "None").
+## - low_energy (bool): agent energy < 30.0.
+## - high_hunger (bool): agent hunger > 70.0.
+## - food_visible (bool): a Food resource node is reachable near the agent right now.
+## - wood_visible (bool): a Wood resource node is reachable near the agent right now.
+## - resource_visible (bool): food_visible or wood_visible.
+## - enemy_near (bool): always false - enemies are Phase 6, not yet implemented.
+## - near_unreported_resource (bool): agent is near a resource not yet in the Nest's Blackboard.
+## - known_food_position (bool): the Blackboard holds at least one Food position (permanent field - Blackboard is kept, see Ticket 14).
+## - known_wood_position (bool): the Blackboard holds at least one Wood position (permanent field - Blackboard is kept, see Ticket 14).
 var at_nest: bool = false
 var has_food: bool = false
 var has_wood: bool = false

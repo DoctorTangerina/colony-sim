@@ -33,7 +33,7 @@
     "name": "ReportResource",
     "cost": 0.3,
     "preconditions": { "at_nest": true, "near_unreported_resource": true },
-    "effects": { "resource_reported": true, "near_unreported_resource": false }
+    "effects": { "near_unreported_resource": false }
   },
   {
     "name": "PickupFood",

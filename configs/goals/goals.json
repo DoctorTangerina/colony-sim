@@ -9,7 +9,7 @@
 	"name": "DiscoverResource",
 	"desirability": 4.0,
 	"preconditions": { "near_unreported_resource": true },
-	"effects": { "resource_reported": true }
+	"effects": {}
   },
   {
 	"name": "CollectFood",
