@@ -25,6 +25,19 @@ func get_cooldown() -> float:
 	return maxf(0.0, (_cooldown_ends_at_msec - Time.get_ticks_msec()) / 1000.0)
 
 
+## Registers the agent with the OM at its starting role. Unlike set_role(),
+## this is initialization, not a role-change event: no cooldown, no
+## role_changed signal, and no update_agent_role call (register_agent covers
+## a fresh registration - going through update_agent_role would just hit its
+## own register-fallback for an id that isn't tracked yet).
+func register_initial_role(agent_node: Node, role_name: String = "Unassigned") -> void:
+	if _role_component:
+		_role_component.load_role(role_name)
+	current_role = role_name
+	if _om_ref:
+		_om_ref.register_agent(_agent_id, role_name, agent_node)
+
+
 func set_role(role_name: String) -> void:
 	if _role_component:
 		var old_role := current_role

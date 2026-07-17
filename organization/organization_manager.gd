@@ -7,6 +7,7 @@ signal agent_unregistered(agent_id: String)
 
 var _role_requests: Array = []
 var _agent_roles: Dictionary = {}
+var _agent_nodes: Dictionary = {}
 var _role_counts: Dictionary = {}
 var _role_change_log: Array = []
 var _death_counter: int = 0
@@ -108,9 +109,11 @@ func get_all_requests() -> Array:
 	return _role_requests.duplicate()
 
 
-func register_agent(agent_id: String, role: String) -> void:
+func register_agent(agent_id: String, role: String, agent_node: Node = null) -> void:
 	_agent_roles[agent_id] = role
 	_role_counts[role] = _role_counts.get(role, 0) + 1
+	if agent_node != null:
+		_agent_nodes[agent_id] = agent_node
 	agent_registered.emit(agent_id, role)
 
 
@@ -121,7 +124,18 @@ func unregister_agent(agent_id: String) -> void:
 		if _role_counts[old_role] <= 0:
 			_role_counts.erase(old_role)
 		_agent_roles.erase(agent_id)
+		_agent_nodes.erase(agent_id)
 		agent_unregistered.emit(agent_id)
+
+
+## Resolves a registered agent id to its live Agent node, e.g. for a UI that
+## needs to query get_debug_info() on demand. Null if never registered with a
+## node reference, or if the node has since been freed.
+func get_agent_node(agent_id: String) -> Node:
+	var node: Node = _agent_nodes.get(agent_id)
+	if node != null and is_instance_valid(node):
+		return node
+	return null
 
 
 func update_agent_role(agent_id: String, new_role: String, reason: String = "") -> void:
@@ -166,12 +180,7 @@ func get_role_change_log() -> Array:
 
 
 func handle_agent_death(agent_id: String) -> void:
-	if _agent_roles.has(agent_id):
-		var role: String = _agent_roles[agent_id]
-		_role_counts[role] = _role_counts.get(role, 0) - 1
-		if _role_counts[role] <= 0:
-			_role_counts.erase(role)
-		_agent_roles.erase(agent_id)
+	unregister_agent(agent_id)
 	_death_counter += 1
 
 

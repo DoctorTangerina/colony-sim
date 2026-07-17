@@ -81,6 +81,7 @@ func setup(nest: Node2D, resource_manager: Node) -> void:
 	var sim_config: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
 	var cooldown_duration: float = sim_config.get("roleCooldown", 10.0)
 	_role_acquisition.setup(_get_om(), _role_component, _nest_zone, agent_id, cooldown_duration)
+	_role_acquisition.register_initial_role(self)
 
 
 func _process(delta: float) -> void:

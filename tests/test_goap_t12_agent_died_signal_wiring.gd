@@ -99,9 +99,16 @@ func _test_simulation_wires_agent_died_to_om_handle_agent_death() -> void:
 	for i in range(5):
 		await get_tree().physics_frame
 
+	# Agent.setup() already registered both agents (with the OM) at spawn as
+	# part of the live sim wiring - update the target agent's role in place
+	# rather than re-registering under a new id (which would leave the spawn
+	# registration as an orphaned entry), and unregister its sibling so the
+	# death assertions below aren't muddied by an unrelated live agent.
 	var agent = sim.get_node("NavigationRegion/Agent")
-	agent.agent_id = "sim_death_agent"
-	om.register_agent("sim_death_agent", "Guard")
+	var sibling = sim.get_node("NavigationRegion/Agent2")
+	var death_agent_id: String = agent.agent_id
+	om.update_agent_role(death_agent_id, "Guard")
+	om.unregister_agent(sibling.agent_id)
 
 	var death_count_before: int = om.get_death_count()
 
@@ -113,5 +120,4 @@ func _test_simulation_wires_agent_died_to_om_handle_agent_death() -> void:
 	_assert(om.get_role_count("Guard") == 0, "OM Guard role count decremented to 0")
 	_assert(om.get_total_agent_count() == 0, "OM total agent count decremented to 0")
 
-	om.unregister_agent("sim_death_agent")
 	sim.queue_free()
