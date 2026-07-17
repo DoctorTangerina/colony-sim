@@ -1,5 +1,9 @@
 extends IAgentActions
 
+## Passive idle recovery for Unassigned agents, distinct from the Rest
+## action's instant +40.0 restore.
+const ENERGY_RECOVERY_RATE: float = 5.0
+
 signal item_changed(new_item: String)
 signal action_completed
 signal role_changed(agent_id: String, old_role: String, new_role: String)
@@ -98,6 +102,13 @@ func _run_planning_cycle() -> void:
 		return
 
 	_role_acquisition.check_and_acquire_role()
+
+	if _role_component.get_role_name() == "Unassigned":
+		_navigator.stop()
+		restore_energy(_planning_interval * ENERGY_RECOVERY_RATE)
+		current_goal = ""
+		current_plan = []
+		return
 
 	var world_state := _build_world_state()
 	var goal = _goal_selector.select_goal(world_state)

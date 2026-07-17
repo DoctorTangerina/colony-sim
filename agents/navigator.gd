@@ -35,6 +35,11 @@ func is_moving() -> bool:
 	return _moving
 
 
+func stop() -> void:
+	_moving = false
+	_body.velocity = Vector2.ZERO
+
+
 func process(delta: float) -> void:
 	if not _nav_ready:
 		return
