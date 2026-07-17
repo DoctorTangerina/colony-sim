@@ -14,6 +14,7 @@ var _eval_timer: float = 0.0
 var _eval_interval: float = 1.0
 var _dynamic_roles_enabled: bool = true
 var _role_cooldown: float = 10.0
+var _min_unassigned_threshold: int = 5
 var _nest_ref: Node = null
 var _thresholds: Dictionary = {}
 var _role_defs: Dictionary = {}
@@ -53,6 +54,7 @@ func _load_config() -> void:
 	_eval_interval = data.get("roleEvalInterval", 1.0)
 	_dynamic_roles_enabled = data.get("enableDynamicRoles", true)
 	_role_cooldown = data.get("roleCooldown", 10.0)
+	_min_unassigned_threshold = data.get("minUnassignedThreshold", 5)
 
 
 func _load_nest_thresholds() -> void:
@@ -237,5 +239,8 @@ func _compute_target_distribution(food: int, wood: int, total: int) -> Dictionar
 				break
 
 		result[role_name] = target
+
+	if total >= _min_unassigned_threshold:
+		result["Unassigned"] = maxi(result.get("Unassigned", 0), 1)
 
 	return result

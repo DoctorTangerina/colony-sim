@@ -4,6 +4,7 @@
   "simulationSpeed": 1.0,
   "roleEvalInterval": 1.0,
   "roleCooldown": 10.0,
+  "minUnassignedThreshold": 5,
   "mapMinX": 32,
   "mapMinY": 32,
   "mapMaxX": 1120,
