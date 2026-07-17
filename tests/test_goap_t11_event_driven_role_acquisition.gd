@@ -75,8 +75,8 @@ func _test_agent_picks_up_role_request_immediately_on_action_completed_in_nest_z
 	var agent = _make_agent()
 	agent.setup(nest, null)
 	agent._role_component.load_role("Unassigned")
-	agent.current_plan = []
-	agent.current_goal = ""
+	agent._goap_cycle.current_plan = []
+	agent._goap_cycle.current_goal = ""
 
 	var nest_shape: CollisionShape2D = nest.get_node("CollisionShape2D")
 	var nest_body_radius: float = (nest_shape.shape as CircleShape2D).radius
@@ -89,7 +89,7 @@ func _test_agent_picks_up_role_request_immediately_on_action_completed_in_nest_z
 
 	om.post_request("Gatherer")
 
-	agent._on_action_completed()
+	agent._goap_cycle.on_action_completed()
 
 	_assert(agent._role_component.get_role_name() == "Gatherer",
 		"Agent acquired the Gatherer role immediately from _on_action_completed (got: %s)" % agent._role_component.get_role_name())
@@ -107,8 +107,8 @@ func _test_agent_does_not_pick_up_role_request_on_action_completed_outside_nest_
 	var agent = _make_agent()
 	agent.setup(nest, null)
 	agent._role_component.load_role("Unassigned")
-	agent.current_plan = []
-	agent.current_goal = ""
+	agent._goap_cycle.current_plan = []
+	agent._goap_cycle.current_goal = ""
 	agent.global_position = Vector2(5000, 5000)
 
 	await get_tree().physics_frame
@@ -118,7 +118,7 @@ func _test_agent_does_not_pick_up_role_request_on_action_completed_outside_nest_
 
 	om.post_request("Explorer")
 
-	agent._on_action_completed()
+	agent._goap_cycle.on_action_completed()
 
 	_assert(agent._role_component.get_role_name() == "Unassigned",
 		"Agent did not acquire a role while outside the nest zone (got: %s)" % agent._role_component.get_role_name())

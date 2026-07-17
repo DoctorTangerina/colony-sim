@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://agents/agent.gd" id="1_agent"]
 [ext_resource type="Script" path="res://agents/navigator.gd" id="2_navigator"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://agents/role_acquisition.gd" id="5_role_acquisition"]
 [ext_resource type="Script" path="res://agents/planner/goap_planner.gd" id="6_goap_planner"]
 [ext_resource type="Script" path="res://agents/goal_selector.gd" id="7_goal_selector"]
+[ext_resource type="Script" path="res://agents/GoapCycle.gd" id="8_goap_cycle"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_agent"]
 size = Vector2(16, 16)
@@ -42,3 +43,6 @@ script = ExtResource("6_goap_planner")
 
 [node name="GOAPGoalSelector" type="Node" parent="."]
 script = ExtResource("7_goal_selector")
+
+[node name="GoapCycle" type="Node" parent="."]
+script = ExtResource("8_goap_cycle")

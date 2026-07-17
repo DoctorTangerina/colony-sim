@@ -1,9 +1,5 @@
 extends IAgentActions
 
-## Passive idle recovery for Unassigned agents, distinct from the Rest
-## action's instant +40.0 restore.
-const ENERGY_RECOVERY_RATE: float = 5.0
-
 signal item_changed(new_item: String)
 signal action_completed
 signal role_changed(agent_id: String, old_role: String, new_role: String)
@@ -13,8 +9,6 @@ var agent_id: String
 var energy: float = 100.0
 var hunger: float = 0.0
 var held_item: String = "None"
-var current_goal: String = ""
-var current_plan: Array = []
 var target_resource: Node = null
 
 var nest_ref: Node2D = null
@@ -27,13 +21,11 @@ var resource_manager_ref: Node = null
 @onready var _role_acquisition: Node = $RoleAcquisition
 @onready var _planner: Node = $GOAPPlanner
 @onready var _goal_selector: Node = $GOAPGoalSelector
+@onready var _goap_cycle: Node = $GoapCycle
 
 var _is_dead: bool = false
 
-var _action_index: int = 0
-var _action_in_progress: bool = false
 var _planning_interval: float = 2.0
-var _planning_timer: float = 0.0
 var _agent_speed: float = 200.0
 var _discovery_radius: float = 50.0
 var discovered_resource_type: String = ""
@@ -49,8 +41,8 @@ func _ready() -> void:
 		agent_id = str(get_instance_id())
 	
 	# Validate required child nodes
-	if not nav_agent or not _navigator or not _nest_zone or not _role_component or not _role_acquisition or not _planner or not _goal_selector:
-		push_error("Agent missing required child nodes: NavAgent, Navigator, NestZone, RoleComponent, RoleAcquisition, GOAPPlanner, GOAPGoalSelector")
+	if not nav_agent or not _navigator or not _nest_zone or not _role_component or not _role_acquisition or not _planner or not _goal_selector or not _goap_cycle:
+		push_error("Agent missing required child nodes: NavAgent, Navigator, NestZone, RoleComponent, RoleAcquisition, GOAPPlanner, GOAPGoalSelector, GoapCycle")
 		return
 	
 	_load_sim_config()
@@ -78,7 +70,8 @@ func _setup_modules() -> void:
 
 	_role_acquisition.role_changed.connect(_on_role_changed)
 
-	action_completed.connect(_on_action_completed)
+	_goap_cycle.setup(self, _planner, _goal_selector, _role_component, _role_acquisition, _navigator, _build_world_state, _planning_interval)
+	action_completed.connect(_goap_cycle.on_action_completed)
 
 
 func setup(nest: Node2D, resource_manager: Node) -> void:
@@ -96,11 +89,7 @@ func _process(delta: float) -> void:
 		return
 
 	_navigator.process(delta)
-
-	_planning_timer -= delta
-	if _planning_timer <= 0.0:
-		_planning_timer = _planning_interval
-		_run_planning_cycle()
+	_goap_cycle.process(delta)
 
 
 ## Guards against re-emitting agent_died once energy has bottomed out.
@@ -110,50 +99,6 @@ func _check_death() -> void:
 	_is_dead = true
 	_navigator.stop()
 	agent_died.emit(agent_id, _role_component.get_role_name())
-
-
-func _run_planning_cycle() -> void:
-	if _action_in_progress:
-		return
-
-	_role_acquisition.check_and_acquire_role()
-
-	if _role_component.get_role_name() == "Unassigned":
-		_navigator.stop()
-		restore_energy(_planning_interval * ENERGY_RECOVERY_RATE)
-		current_goal = ""
-		current_plan = []
-		return
-
-	var world_state := _build_world_state()
-	var goal = _goal_selector.select_goal(world_state)
-
-	if goal.is_empty():
-		current_goal = ""
-		current_plan = []
-		return
-
-	var goal_name: String = goal["name"]
-	if goal_name == current_goal and current_plan.size() > 0 and _action_index < current_plan.size():
-		return
-
-	current_goal = goal_name
-	current_plan = _planner.create_plan(goal_name, world_state)
-	_action_index = 0
-
-	if current_plan.size() > 0:
-		if _planner.validate_plan(current_plan, world_state):
-			_execute_current_action()
-		else:
-			current_plan = _planner.create_plan(goal_name, world_state)
-			if current_plan.size() > 0 and _planner.validate_plan(current_plan, world_state):
-				_execute_current_action()
-			else:
-				current_goal = ""
-				current_plan = []
-	else:
-		current_goal = ""
-		current_plan = []
 
 
 func _build_world_state() -> WorldState:
@@ -197,18 +142,6 @@ func _build_world_state() -> WorldState:
 	return WorldState.build(held_item, energy, hunger, at_nest, food_visible, wood_visible, near_unreported, has_known_food, has_known_wood)
 
 
-func _execute_current_action() -> void:
-	if _action_index >= current_plan.size():
-		current_plan = []
-		current_goal = ""
-		_action_in_progress = false
-		return
-
-	var action_name: String = current_plan[_action_index]
-	_action_in_progress = true
-	GoapActionExecutor.execute_action(action_name, self)
-
-
 func _on_arrived_at_target() -> void:
 	if target_resource and is_instance_valid(target_resource):
 		var res: ResourceNode = target_resource as ResourceNode
@@ -220,32 +153,8 @@ func _on_arrived_at_target() -> void:
 	action_completed.emit()
 
 
-func _on_action_completed() -> void:
-	_role_acquisition.check_and_acquire_role()
-
-	_action_in_progress = false
-	_action_index += 1
-
-	if _action_index >= current_plan.size():
-		current_plan = []
-		current_goal = ""
-		return
-
-	var remaining_plan: Array = current_plan.slice(_action_index)
-	if not _planner.validate_plan(remaining_plan, _build_world_state()):
-		current_plan = []
-		current_goal = ""
-		_run_planning_cycle()
-		return
-
-	_execute_current_action()
-
-
 func _on_role_changed(_agent_id: String, _old_role: String, _new_role: String) -> void:
-	current_goal = ""
-	current_plan = []
-	_action_index = 0
-	_action_in_progress = false
+	_goap_cycle.on_role_changed()
 	role_changed.emit(agent_id, _old_role, _new_role)
 
 

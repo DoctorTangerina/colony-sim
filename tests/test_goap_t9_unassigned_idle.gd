@@ -41,7 +41,7 @@ func _test_unassigned_agent_stands_still() -> void:
 	agent._role_component.load_role("Unassigned")
 	agent.velocity = Vector2(999, 999)
 
-	agent._run_planning_cycle()
+	agent._goap_cycle.run_planning_cycle()
 
 	_assert(agent.velocity == Vector2.ZERO, "Velocity is Vector2.ZERO after an Unassigned planning cycle")
 
@@ -54,7 +54,7 @@ func _test_unassigned_agent_stops_in_flight_navigation() -> void:
 	_assert(agent._navigator.is_moving(), "Navigator is mid-move before the role change")
 
 	agent._role_component.load_role("Unassigned")
-	agent._run_planning_cycle()
+	agent._goap_cycle.run_planning_cycle()
 	_assert(not agent._navigator.is_moving(), "Navigator move was cancelled by the Unassigned cycle")
 
 	agent.velocity = Vector2(999, 999)
@@ -69,9 +69,9 @@ func _test_unassigned_agent_energy_rises_over_time() -> void:
 	agent._role_component.load_role("Unassigned")
 	agent.energy = 50.0
 
-	agent._run_planning_cycle()
+	agent._goap_cycle.run_planning_cycle()
 	var after_one: float = agent.energy
-	agent._run_planning_cycle()
+	agent._goap_cycle.run_planning_cycle()
 	var after_two: float = agent.energy
 
 	_assert(after_one > 50.0, "Energy increased after one planning cycle (got %s)" % after_one)
@@ -82,23 +82,23 @@ func _test_unassigned_agent_selects_no_goal_or_plan() -> void:
 	print("[Test] Unassigned agent builds no goal and no plan")
 	var agent = _make_agent()
 	agent._role_component.load_role("Unassigned")
-	agent.current_goal = "CollectFood"
-	agent.current_plan = ["PickupFood"]
+	agent._goap_cycle.current_goal = "CollectFood"
+	agent._goap_cycle.current_plan = ["PickupFood"]
 
-	agent._run_planning_cycle()
+	agent._goap_cycle.run_planning_cycle()
 
-	_assert(agent.current_goal == "", "current_goal cleared for Unassigned (got: %s)" % agent.current_goal)
-	_assert(agent.current_plan.is_empty(), "current_plan cleared for Unassigned (got: %s)" % [agent.current_plan])
+	_assert(agent._goap_cycle.current_goal == "", "current_goal cleared for Unassigned (got: %s)" % agent._goap_cycle.current_goal)
+	_assert(agent._goap_cycle.current_plan.is_empty(), "current_plan cleared for Unassigned (got: %s)" % [agent._goap_cycle.current_plan])
 
 
 func _test_role_acquisition_resumes_normal_planning() -> void:
 	print("[Test] Accepting a role resumes normal goal selection")
 	var agent = _make_agent()
 	agent._role_component.load_role("Unassigned")
-	agent._run_planning_cycle()
-	_assert(agent.current_goal == "", "Agent has no goal while Unassigned")
+	agent._goap_cycle.run_planning_cycle()
+	_assert(agent._goap_cycle.current_goal == "", "Agent has no goal while Unassigned")
 
 	agent._role_component.load_role("Explorer")
-	agent._run_planning_cycle()
+	agent._goap_cycle.run_planning_cycle()
 
-	_assert(agent.current_goal != "", "Agent selected a real goal once assigned a role (got: %s)" % agent.current_goal)
+	_assert(agent._goap_cycle.current_goal != "", "Agent selected a real goal once assigned a role (got: %s)" % agent._goap_cycle.current_goal)

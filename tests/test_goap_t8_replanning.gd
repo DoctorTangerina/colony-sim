@@ -83,17 +83,17 @@ func _test_agent_replans_when_resource_disappears_mid_plan() -> void:
 	agent._role_component.load_role("Gatherer")
 	agent.resource_manager_ref = _make_mock_resource_manager(false, true)
 
-	agent.current_goal = "CollectFood"
-	agent.current_plan = ["PickupFood", "ReturnToNest", "DepositResource"]
-	agent._action_index = 0
+	agent._goap_cycle.current_goal = "CollectFood"
+	agent._goap_cycle.current_plan = ["PickupFood", "ReturnToNest", "DepositResource"]
+	agent._goap_cycle._action_index = 0
 	agent.held_item = "None"
 
-	agent._on_action_completed()
+	agent._goap_cycle.on_action_completed()
 
-	_assert(agent.current_goal != "CollectFood", "Stale CollectFood goal was abandoned (got: %s)" % agent.current_goal)
-	_assert(agent.current_goal == "CollectWood", "Agent replanned onto CollectWood (got: %s)" % agent.current_goal)
-	_assert(agent.current_plan == ["PickupWood"], "New plan targets the still-visible Wood resource (got: %s)" % [agent.current_plan])
-	_assert(agent._action_in_progress, "Agent immediately started executing the new plan")
+	_assert(agent._goap_cycle.current_goal != "CollectFood", "Stale CollectFood goal was abandoned (got: %s)" % agent._goap_cycle.current_goal)
+	_assert(agent._goap_cycle.current_goal == "CollectWood", "Agent replanned onto CollectWood (got: %s)" % agent._goap_cycle.current_goal)
+	_assert(agent._goap_cycle.current_plan == ["PickupWood"], "New plan targets the still-visible Wood resource (got: %s)" % [agent._goap_cycle.current_plan])
+	_assert(agent._goap_cycle._action_in_progress, "Agent immediately started executing the new plan")
 
 
 func _test_agent_falls_back_to_return_to_nest_when_no_resources_remain() -> void:
@@ -102,13 +102,13 @@ func _test_agent_falls_back_to_return_to_nest_when_no_resources_remain() -> void
 	agent._role_component.load_role("Gatherer")
 	agent.resource_manager_ref = _make_mock_resource_manager(false, false)
 
-	agent.current_goal = "CollectFood"
-	agent.current_plan = ["PickupFood", "ReturnToNest", "DepositResource"]
-	agent._action_index = 0
+	agent._goap_cycle.current_goal = "CollectFood"
+	agent._goap_cycle.current_plan = ["PickupFood", "ReturnToNest", "DepositResource"]
+	agent._goap_cycle._action_index = 0
 	agent.held_item = "None"
 
-	agent._on_action_completed()
+	agent._goap_cycle.on_action_completed()
 
-	_assert(agent.current_goal != "CollectFood", "Stale CollectFood goal was abandoned (got: %s)" % agent.current_goal)
-	_assert(agent.current_plan.is_empty() and agent.current_goal == "",
-		"Agent goes idle cleanly rather than executing the stale invalid plan (goal: %s, plan: %s)" % [agent.current_goal, agent.current_plan])
+	_assert(agent._goap_cycle.current_goal != "CollectFood", "Stale CollectFood goal was abandoned (got: %s)" % agent._goap_cycle.current_goal)
+	_assert(agent._goap_cycle.current_plan.is_empty() and agent._goap_cycle.current_goal == "",
+		"Agent goes idle cleanly rather than executing the stale invalid plan (goal: %s, plan: %s)" % [agent._goap_cycle.current_goal, agent._goap_cycle.current_plan])
