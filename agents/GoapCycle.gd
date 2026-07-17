@@ -126,6 +126,7 @@ func on_role_changed() -> void:
 	current_plan = []
 	_action_index = 0
 	_action_in_progress = false
+	_planner.cancel_plan()
 
 
 func _execute_current_action() -> void:

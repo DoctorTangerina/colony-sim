@@ -56,6 +56,12 @@ func create_plan(goal_name: String, world_state: WorldState, allowed_actions: Ar
 	return result
 
 
+## GOAPPlanner is stateless per plan: create_plan()/validate_plan() take a
+## world_state and return/check a plan without caching one on the planner -
+## GoapCycle owns "the current plan" (Ticket 20). There is nothing here to
+## reset; this method exists so the planner's documented API
+## (create_plan/cancel_plan/validate_plan) is safe to call unconditionally
+## on every role change.
 func cancel_plan() -> void:
 	pass
 
