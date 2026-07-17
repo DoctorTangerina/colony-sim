@@ -39,12 +39,12 @@ var _map_max: Vector2
 func _ready() -> void:
 	if agent_id.is_empty():
 		agent_id = str(get_instance_id())
-	
+
 	# Validate required child nodes
 	if not nav_agent or not _navigator or not _nest_zone or not _role_component or not _role_acquisition or not _planner or not _goal_selector or not _goap_cycle:
 		push_error("Agent missing required child nodes: NavAgent, Navigator, NestZone, RoleComponent, RoleAcquisition, GOAPPlanner, GOAPGoalSelector, GoapCycle")
 		return
-	
+
 	_load_sim_config()
 	_setup_modules()
 
@@ -231,6 +231,18 @@ func get_world_bounds() -> Rect2:
 
 func get_role_component() -> Node:
 	return _role_component
+
+
+func get_debug_info() -> Dictionary:
+	return {
+		"agent_id": agent_id,
+		"role": _role_component.get_role_name(),
+		"active_goal": _goap_cycle.current_goal,
+		"executing_action": _goap_cycle.get_executing_action(),
+		"energy": energy,
+		"hunger": hunger,
+		"plan": _goap_cycle.current_plan.duplicate(),
+	}
 
 
 func _get_om():

@@ -98,6 +98,14 @@ func run_planning_cycle() -> void:
 		current_plan = []
 
 
+## Public accessor so callers (e.g. the debugger UI) can read the action
+## actually executing without reaching into _action_in_progress/_action_index.
+func get_executing_action() -> String:
+	if _action_in_progress and _action_index < current_plan.size():
+		return current_plan[_action_index]
+	return ""
+
+
 func on_action_completed() -> void:
 	_role_acquisition.check_and_acquire_role()
 
