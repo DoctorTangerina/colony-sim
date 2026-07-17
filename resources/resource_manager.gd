@@ -11,8 +11,19 @@ var _map_max: Vector2
 func _ready() -> void:
 	_load_config()
 	_load_definitions()
-	await get_tree().create_timer(0.1).timeout
+	await _wait_for_navigation_map_ready()
 	_spawn_initial_nodes()
+
+func _wait_for_navigation_map_ready() -> void:
+	var nav_map: RID = get_tree().root.get_world_2d().navigation_map
+	var probe := (_map_min + _map_max) * 0.5
+	for _attempt in range(100):
+		var changed_map: RID = await NavigationServer2D.map_changed
+		if changed_map != nav_map:
+			continue
+		if NavigationServer2D.map_get_closest_point(nav_map, probe) != Vector2.ZERO:
+			return
+	push_error("resource_manager: navigation map never became queryable; resources may spawn at (0,0)")
 
 func _load_config() -> void:
 	var data: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
