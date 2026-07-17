@@ -5,9 +5,7 @@
     "AttackEnemy"
   ],
   "allowedActions": [
-    "MoveTo",
-    "PatrolNest",
-    "AttackTarget"
+    "MoveTo"
   ],
   "priorityModifiers": {
     "DefendNest": 3.0,

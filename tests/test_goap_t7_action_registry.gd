@@ -14,8 +14,6 @@ func _ready() -> void:
 	_test_deposit_resource_deposits_and_completes()
 	_test_pickup_wood_moves_to_nearest_wood()
 	_test_random_explore_moves_within_bounds()
-	_test_patrol_nest_moves_near_nest()
-	_test_patrol_nest_completes_when_no_nest()
 	_test_unregistered_action_falls_back_to_default()
 	_test_registered_actions_do_not_use_default_handler()
 
@@ -146,33 +144,12 @@ func _test_random_explore_moves_within_bounds() -> void:
 	_assert(bounds.has_point(agent._move_target), "Move target is within world bounds")
 
 
-func _test_patrol_nest_moves_near_nest() -> void:
-	print("[Test] PatrolNest moves near the nest when nest exists")
-	var agent = _make_mock_agent()
-	agent.nest_ref = Node2D.new()
-	GoapActionExecutor.execute_action("PatrolNest", agent)
-	_assert(agent._move_called, "move_to was called")
-	_assert(agent._move_target.distance_to(Vector2(576, 324)) < 120.0, "Move target is near nest position")
-
-
-func _test_patrol_nest_completes_when_no_nest() -> void:
-	print("[Test] PatrolNest completes immediately when no nest is known")
-	var agent = _make_mock_agent()
-	GoapActionExecutor.execute_action("PatrolNest", agent)
-	_assert(not agent._move_called, "move_to was not called")
-	_assert(agent._completed, "complete_action called")
-
-
 func _test_unregistered_action_falls_back_to_default() -> void:
 	print("[Test] An action absent from the registry completes via the default handler")
 	var agent = _make_mock_agent()
-	GoapActionExecutor.execute_action("AttackTarget", agent)
-	_assert(agent._completed, "AttackTarget (unregistered) completes via default handler")
-	_assert(not agent._move_called, "AttackTarget (unregistered) does not move")
-
-	var agent2 = _make_mock_agent()
-	GoapActionExecutor.execute_action("SomeBrandNewActionNotInAnyRegistry", agent2)
-	_assert(agent2._completed, "A wholly new, never-registered action name still completes via default handler")
+	GoapActionExecutor.execute_action("SomeBrandNewActionNotInAnyRegistry", agent)
+	_assert(agent._completed, "A wholly new, never-registered action name still completes via default handler")
+	_assert(not agent._move_called, "Unregistered action does not move")
 
 
 func _test_registered_actions_do_not_use_default_handler() -> void:

@@ -1,11 +1,10 @@
 class_name GoapActionExecutor
 extends Node
 
-## Actions not present here (e.g. LayReturnPheromone, FollowPheromone,
-## AttackTarget) fall through to _default_handler, which just completes the
-## action. Register an entry only when an action needs bespoke behavior -
-## most new actions need none, keeping executor edits off the "adding an
-## action" checklist entirely.
+## Actions not present here fall through to _default_handler, which just
+## completes the action. Register an entry only when an action needs bespoke
+## behavior - most new actions need none, keeping executor edits off the
+## "adding an action" checklist entirely.
 static var _registry: Dictionary = {}
 
 
@@ -26,7 +25,6 @@ static func _ensure_registry() -> void:
 	_registry[GoapActions.PICKUP_WOOD] = _pickup_wood
 	_registry[GoapActions.DEPOSIT_RESOURCE] = _deposit_resource
 	_registry[GoapActions.RANDOM_EXPLORE] = _explore
-	_registry[GoapActions.PATROL_NEST] = _patrol
 	_registry[GoapActions.REPORT_RESOURCE] = _report_resource
 
 
@@ -93,15 +91,6 @@ static func _explore(agent: IAgentActions) -> void:
 		randf_range(bounds.position.y, bounds.position.y + bounds.size.y)
 	)
 	agent.move_to(random_pos)
-
-
-static func _patrol(agent: IAgentActions) -> void:
-	var nest_pos: Vector2 = agent.get_nest_position()
-	if nest_pos != Vector2.ZERO:
-		var offset := Vector2(randf_range(-80.0, 80.0), randf_range(-80.0, 80.0))
-		agent.move_to(nest_pos + offset)
-	else:
-		agent.complete_action()
 
 
 ## Left untyped/untouched: writes directly to the Blackboard node rather than

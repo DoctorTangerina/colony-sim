@@ -52,17 +52,5 @@
     "cost": 1.0,
     "preconditions": { "has_item": true, "at_nest": true },
     "effects": { "has_food": false, "has_wood": false }
-  },
-  {
-    "name": "PatrolNest",
-    "cost": 1.5,
-    "preconditions": {},
-    "effects": {}
-  },
-  {
-    "name": "AttackTarget",
-    "cost": 3.0,
-    "preconditions": { "enemy_near": true },
-    "effects": { "enemy_near": false }
   }
 ]
