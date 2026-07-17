@@ -24,5 +24,6 @@
       { "match": "any", "conditions": [{ "type": "Food", "level": "low" }, { "type": "Wood", "level": "low" }], "percent": 0.5 },
       { "default": true, "percent": 0 }
     ]
-  }
+  },
+  "color": "#4ec9b0"
 }

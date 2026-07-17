@@ -19,5 +19,6 @@
       { "match": "all", "conditions": [{ "type": "Food", "level": "abundant" }, { "type": "Wood", "level": "abundant" }], "percent": 0.4 },
       { "default": true, "percent": 0.2 }
     ]
-  }
+  },
+  "color": "#dcdcaa"
 }
