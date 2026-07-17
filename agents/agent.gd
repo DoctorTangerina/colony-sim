@@ -88,7 +88,6 @@ func setup(nest: Node2D, resource_manager: Node) -> void:
 
 
 func _process(delta: float) -> void:
-	_role_acquisition.process(delta)
 	_navigator.process(delta)
 
 	_planning_timer -= delta
@@ -206,6 +205,8 @@ func _on_arrived_at_target() -> void:
 
 
 func _on_action_completed() -> void:
+	_role_acquisition.check_and_acquire_role()
+
 	_action_in_progress = false
 	_action_index += 1
 

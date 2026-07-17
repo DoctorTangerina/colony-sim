@@ -7,8 +7,8 @@ var _om_ref: Node = null
 var _role_component: Node = null
 var _nest_zone: Node = null
 var _agent_id: String = ""
-var _role_cooldown: float = 0.0
 var _role_cooldown_duration: float = 10.0
+var _cooldown_ends_at_msec: int = 0
 
 
 func setup(om_ref: Node, role_component: Node, nest_zone: Node, agent_id: String, cooldown_duration: float = 10.0) -> void:
@@ -19,9 +19,10 @@ func setup(om_ref: Node, role_component: Node, nest_zone: Node, agent_id: String
 	_role_cooldown_duration = cooldown_duration
 
 
-func process(delta: float) -> void:
-	if _role_cooldown > 0.0:
-		_role_cooldown = maxf(_role_cooldown - delta, 0.0)
+## Timestamp-based (not per-frame decremented) so acquisition can be
+## checked on-demand from event handlers instead of needing a process() tick.
+func get_cooldown() -> float:
+	return maxf(0.0, (_cooldown_ends_at_msec - Time.get_ticks_msec()) / 1000.0)
 
 
 func set_role(role_name: String) -> void:
@@ -29,7 +30,7 @@ func set_role(role_name: String) -> void:
 		var old_role := current_role
 		_role_component.load_role(role_name)
 		current_role = role_name
-		_role_cooldown = _role_cooldown_duration
+		_cooldown_ends_at_msec = Time.get_ticks_msec() + int(_role_cooldown_duration * 1000.0)
 		role_changed.emit(_agent_id, old_role, role_name)
 
 		if role_name != "" and role_name != "Unassigned" and _om_ref:
@@ -41,7 +42,7 @@ func get_current_role() -> String:
 
 
 func check_and_acquire_role() -> void:
-	if _role_cooldown > 0.0:
+	if get_cooldown() > 0.0:
 		return
 	if _nest_zone and not _nest_zone.is_in_nest_zone():
 		return
