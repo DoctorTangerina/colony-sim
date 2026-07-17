@@ -26,6 +26,8 @@ func _find_and_setup_agents(node: Node, nest: Node2D, rm: Node) -> void:
 	for child in node.get_children():
 		if child is CharacterBody2D and child.has_method("setup"):
 			child.setup(nest, rm)
+			if child.has_signal("agent_died"):
+				child.agent_died.connect(_on_agent_died)
 		if child.get_child_count() > 0:
 			_find_and_setup_agents(child, nest, rm)
 
@@ -34,3 +36,9 @@ func _connect_om(nest: Node2D) -> void:
 	var om = get_node_or_null("/root/OrganizationManager")
 	if om and om.has_method("setup"):
 		om.setup(nest)
+
+
+func _on_agent_died(agent_id: String, _last_role: String) -> void:
+	var om = get_node_or_null("/root/OrganizationManager")
+	if om and om.has_method("handle_agent_death"):
+		om.handle_agent_death(agent_id)

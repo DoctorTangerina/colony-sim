@@ -7,6 +7,7 @@ const ENERGY_RECOVERY_RATE: float = 5.0
 signal item_changed(new_item: String)
 signal action_completed
 signal role_changed(agent_id: String, old_role: String, new_role: String)
+signal agent_died(agent_id: String, last_role: String)
 
 var agent_id: String
 var energy: float = 100.0
@@ -26,6 +27,8 @@ var resource_manager_ref: Node = null
 @onready var _role_acquisition: Node = $RoleAcquisition
 @onready var _planner: Node = $GOAPPlanner
 @onready var _goal_selector: Node = $GOAPGoalSelector
+
+var _is_dead: bool = false
 
 var _action_index: int = 0
 var _action_in_progress: bool = false
@@ -88,12 +91,25 @@ func setup(nest: Node2D, resource_manager: Node) -> void:
 
 
 func _process(delta: float) -> void:
+	_check_death()
+	if _is_dead:
+		return
+
 	_navigator.process(delta)
 
 	_planning_timer -= delta
 	if _planning_timer <= 0.0:
 		_planning_timer = _planning_interval
 		_run_planning_cycle()
+
+
+## Guards against re-emitting agent_died once energy has bottomed out.
+func _check_death() -> void:
+	if _is_dead or energy > 0.0:
+		return
+	_is_dead = true
+	_navigator.stop()
+	agent_died.emit(agent_id, _role_component.get_role_name())
 
 
 func _run_planning_cycle() -> void:
