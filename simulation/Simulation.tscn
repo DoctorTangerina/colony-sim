@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://cmi0msx5vjkia" path="res://simulation/simulation.gd" id="1"]
 [ext_resource type="PackedScene" path="res://agents/agent.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://organization/Nest.tscn" id="3_gmbkg"]
-[ext_resource type="PackedScene" uid="uid://bpq8kyr2ttent" path="res://resources/resource_node.tscn" id="4"]
 [ext_resource type="Script" uid="uid://4wlj7k7xeod0" path="res://resources/resource_manager.gd" id="5"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_main"]
@@ -25,13 +24,6 @@ position = Vector2(530, 340)
 
 [node name="Nest" parent="." unique_id=1524362266 instance=ExtResource("3_gmbkg")]
 position = Vector2(576, 324)
-
-[node name="FoodNode" parent="." unique_id=1765432804 instance=ExtResource("4")]
-position = Vector2(200, 200)
-
-[node name="WoodNode" parent="." unique_id=1172988148 instance=ExtResource("4")]
-position = Vector2(900, 400)
-resource_type = "Wood"
 
 [node name="ResourceManager" type="Node" parent="." unique_id=2068742941]
 script = ExtResource("5")
