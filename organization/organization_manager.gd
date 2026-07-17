@@ -128,6 +128,13 @@ func unregister_agent(agent_id: String) -> void:
 		agent_unregistered.emit(agent_id)
 
 
+## Snapshot of currently-registered agent ids, e.g. for a UI that boots after
+## agents have already registered (scene tree ready-order isn't guaranteed)
+## and needs to backfill state instead of relying solely on future signals.
+func get_registered_agent_ids() -> Array:
+	return _agent_roles.keys()
+
+
 ## Resolves a registered agent id to its live Agent node, e.g. for a UI that
 ## needs to query get_debug_info() on demand. Null if never registered with a
 ## node reference, or if the node has since been freed.
