@@ -1,8 +1,7 @@
 {
   "name": "Explorer",
   "allowedGoals": [
-    "Explore",
-    "DiscoverResource"
+    "Explore"
   ],
   "allowedActions": [
     "MoveTo",
@@ -11,7 +10,6 @@
   ],
   "priorityModifiers": {
     "Explore": 2.0,
-    "DiscoverResource": 2.0,
     "Eat": 0.5,
     "Rest": 0.5,
     "ReturnToNest": 0.5

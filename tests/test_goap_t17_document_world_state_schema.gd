@@ -28,9 +28,8 @@ func _assert(condition: bool, test_name: String) -> void:
 
 ## Every precondition/effect key across configs/actions and configs/goals
 ## must be a field WorldState actually tracks - an undocumented key is
-## silently dropped by WorldState.satisfies()/merge(), which is exactly the
-## bug this ticket closes (a stray "resource_reported" key used to make
-## DiscoverResource's goal unreachable without any error).
+## silently dropped by WorldState.satisfies()/merge(), turning a goal's
+## effect into a silent no-op with no error.
 func _collect_state_keys(entries: Array) -> Array:
 	var keys := {}
 	for entry in entries:

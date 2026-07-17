@@ -6,12 +6,6 @@
 	"effects": { "resource_visible": true }
   },
   {
-	"name": "DiscoverResource",
-	"desirability": 4.0,
-	"preconditions": { "near_unreported_resource": true },
-	"effects": {}
-  },
-  {
 	"name": "CollectFood",
 	"desirability": 5.0,
 	"preconditions": { "food_visible": true },

@@ -147,9 +147,9 @@ func _test_goal_selector_selects_rest_when_tired() -> void:
 func _test_goal_selector_selects_explore_for_explorer() -> void:
 	print("[Test] GoalSelector selects Explore for Explorer role")
 	var role_component := _make_role_component(
-		["Explore", "DiscoverResource", "Eat", "Rest", "ReturnToNest"],
+		["Explore", "Eat", "Rest", "ReturnToNest"],
 		[],
-		{"Explore": 2.0, "DiscoverResource": 2.0}
+		{"Explore": 2.0}
 	)
 	goal_selector.set_role_component(role_component)
 
@@ -157,8 +157,7 @@ func _test_goal_selector_selects_explore_for_explorer() -> void:
 	var goal = goal_selector.select_goal(world)
 	_assert(not goal.is_empty(), "GoalSelector found a goal")
 	var goal_name = goal.get("name", "")
-	_assert(goal_name == "Explore" or goal_name == "DiscoverResource",
-		"GoalSelector selects Explore/DiscoverResource for Explorer (got: %s)" % goal_name)
+	_assert(goal_name == "Explore", "GoalSelector selects Explore for Explorer (got: %s)" % goal_name)
 
 	goal_selector.set_role_component(null)
 

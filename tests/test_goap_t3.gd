@@ -62,7 +62,6 @@ func _test_role_loads_explorer() -> void:
 	_assert(rc.get_role_name() == "Explorer", "Role name is Explorer")
 	_assert(rc.get_allowed_goals().size() > 0, "Explorer has allowed goals")
 	_assert("Explore" in rc.get_allowed_goals(), "Explorer can Explore")
-	_assert("DiscoverResource" in rc.get_allowed_goals(), "Explorer can DiscoverResource")
 
 
 func _test_role_loads_gatherer() -> void:
@@ -153,5 +152,4 @@ func _test_gatherer_restricted_goals() -> void:
 	var rc = _make_role_component()
 	rc.load_role("Gatherer")
 	_assert(not rc.has_goal("Explore"), "Gatherer cannot Explore")
-	_assert(not rc.has_goal("DiscoverResource"), "Gatherer cannot DiscoverResource")
 	_assert(not rc.has_goal("DefendNest"), "Gatherer cannot DefendNest")
