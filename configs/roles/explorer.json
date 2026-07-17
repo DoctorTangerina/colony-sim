@@ -18,7 +18,7 @@
   },
   "distribution": {
     "rules": [
-      { "if_resource_at_or_below": { "type": "Food", "level": "abundant", "and_type": "Wood", "and_level": "abundant" }, "percent": 0.4 },
+      { "match": "all", "conditions": [{ "type": "Food", "level": "abundant" }, { "type": "Wood", "level": "abundant" }], "percent": 0.4 },
       { "default": true, "percent": 0.2 }
     ]
   }

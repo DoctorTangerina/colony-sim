@@ -21,10 +21,7 @@
   },
   "distribution": {
     "rules": [
-      { "if_resource_at_or_below": { "type": "Food", "level": "low" }, "percent": 0.5 },
-      { "if_resource_at_or_below": { "type": "Wood", "level": "low" }, "percent": 0.5 },
-      { "if_resource_at_or_below": { "type": "Food", "level": "low", "multiply_level": 3 }, "percent": 0.3 },
-      { "if_resource_at_or_below": { "type": "Wood", "level": "low", "multiply_level": 3 }, "percent": 0.3 },
+      { "match": "any", "conditions": [{ "type": "Food", "level": "low" }, { "type": "Wood", "level": "low" }], "percent": 0.5 },
       { "default": true, "percent": 0 }
     ]
   }

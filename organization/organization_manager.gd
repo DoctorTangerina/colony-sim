@@ -223,18 +223,11 @@ func _compute_target_distribution(food: int, wood: int, total: int) -> Dictionar
 				target = maxi(0, ceili(total * rule.get("percent", 0.0)))
 				break
 
-			var cond: Dictionary = rule.get("if_resource_at_or_below", {})
-			if cond.is_empty():
+			var conditions: Array = rule.get("conditions", [])
+			if conditions.is_empty():
 				continue
 
-			var res_type: String = cond.get("type", "")
-			var level_name: String = cond.get("level", "low")
-			var threshold_val: int = get_threshold(res_type, level_name, 0)
-			var multiply: int = cond.get("multiply_level", 1)
-			var effective_threshold: int = threshold_val * multiply
-
-			var resource_val: int = food if res_type == "Food" else wood
-			if resource_val <= effective_threshold:
+			if _conditions_met(conditions, rule.get("match", "any"), food, wood):
 				target = maxi(1, ceili(total * rule.get("percent", 0.0)))
 				break
 
@@ -244,3 +237,25 @@ func _compute_target_distribution(food: int, wood: int, total: int) -> Dictionar
 		result["Unassigned"] = maxi(result.get("Unassigned", 0), 1)
 
 	return result
+
+
+## A condition's level name gives its direction: "low" means at or below that
+## threshold, "abundant" means at or above - so "Food low" and "Food abundant"
+## read the same way they're written in the role JSON.
+func _conditions_met(conditions: Array, match_mode: String, food: int, wood: int) -> bool:
+	var require_all: bool = match_mode == "all"
+
+	for cond in conditions:
+		var res_type: String = cond.get("type", "")
+		var level_name: String = cond.get("level", "low")
+		var threshold_val: int = get_threshold(res_type, level_name, 0)
+		var resource_val: int = food if res_type == "Food" else wood
+
+		var condition_met: bool = resource_val >= threshold_val if level_name == "abundant" else resource_val <= threshold_val
+
+		if require_all and not condition_met:
+			return false
+		if not require_all and condition_met:
+			return true
+
+	return require_all
