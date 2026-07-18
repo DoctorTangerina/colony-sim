@@ -3,8 +3,9 @@ extends Resource
 
 ## World-state schema. This is the full set of flags a goal/action
 ## precondition or effect (configs/goals, configs/actions) may reference -
-## satisfies() and merge() silently ignore any key not listed here, so an
-## undocumented flag in a config file is a silent no-op, not an error.
+## satisfies(), merge(), and set_field() fail loudly (push_error) on any key
+## not listed here, so an undocumented flag in a config file breaks
+## immediately in testing instead of manifesting as a silent no-op.
 ##
 ## - at_nest (bool): agent is within nest interaction range.
 ## - has_food (bool): agent's held item is "Food".
@@ -68,7 +69,10 @@ static func build(
 
 func satisfies(preconditions: Dictionary) -> bool:
 	for key in preconditions:
-		if key not in get_field_keys() or get_field(key) != preconditions[key]:
+		if key not in get_field_keys():
+			_fail_unrecognized_key(key)
+			return false
+		if get_field(key) != preconditions[key]:
 			return false
 	return true
 
@@ -76,9 +80,21 @@ func satisfies(preconditions: Dictionary) -> bool:
 func merge(effects: Dictionary) -> WorldState:
 	var new_state := clone()
 	for key in effects:
-		if key in new_state.get_field_keys():
-			new_state.set_field(key, effects[key])
+		if key not in new_state.get_field_keys():
+			_fail_unrecognized_key(key)
+			continue
+		new_state.set_field(key, effects[key])
 	return new_state
+
+
+## A precondition/effect key outside get_field_keys()'s schema is a config
+## bug (a typo, or a field a later ticket forgot to add here) - loud so it
+## breaks in testing instead of surfacing as a mysteriously-permanent Action
+## Failure (see docs/adr/0008). push_error only, no assert(): assert() halts
+## the process waiting for a debugger even headless, with no attached
+## debugger to resume it - a hang, not a fail-fast, in a CI/test context.
+func _fail_unrecognized_key(key: String) -> void:
+	push_error("WorldState: unrecognized key '%s' - not in the documented schema (get_field_keys())" % key)
 
 
 # Resource.duplicate() only copies properties with PROPERTY_USAGE_STORAGE;
@@ -142,3 +158,4 @@ func set_field(key: String, value: Variant) -> void:
 		"known_food_position": known_food_position = value
 		"known_wood_position": known_wood_position = value
 		"has_unreported_discovery": has_unreported_discovery = value
+		_: _fail_unrecognized_key(key)

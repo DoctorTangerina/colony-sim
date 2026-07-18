@@ -183,9 +183,6 @@ func _test_goal_selector_selects_collect_for_gatherer() -> void:
 
 func _make_role_component(allowed_goals: Array, allowed_actions: Array, priority_modifiers: Dictionary) -> Node:
 	var rc := Node.new()
-	rc.set("allowed_goals", allowed_goals)
-	rc.set("allowed_actions", allowed_actions)
-	rc.set("priority_modifiers", priority_modifiers)
 
 	var script := GDScript.new()
 	script.source_code = """extends Node
@@ -205,5 +202,15 @@ func get_priority_modifier(goal_name: String) -> float:
 """
 	script.reload()
 	rc.set_script(script)
+
+	# Must run after set_script(): Object.set() on a plain Node with no
+	# matching property (script not attached yet) is a silent no-op, not a
+	# deferred assignment - these would otherwise be dropped and every
+	# stub role component would report empty allowed_goals/allowed_actions
+	# regardless of what's passed in here.
+	rc.set("allowed_goals", allowed_goals)
+	rc.set("allowed_actions", allowed_actions)
+	rc.set("priority_modifiers", priority_modifiers)
+
 	add_child(rc)
 	return rc

@@ -48,18 +48,15 @@ func _get_achievable_goals(world_state: WorldState) -> Array[Dictionary]:
 
 	var result: Array[Dictionary] = []
 	for goal in _goals:
-		if not allowed_goals.is_empty():
-			if not goal["name"] in allowed_goals:
-				continue
-		elif _role_component and _role_component.has_method("get_role_name"):
-			if _role_component.get_role_name() == "Unassigned":
-				continue
+		var goal_name: String = goal["name"]
+		if not UniversalCapabilities.is_universal_goal(goal_name) and not goal_name in allowed_goals:
+			continue
 		var preconds: Dictionary = goal.get("preconditions", {})
 		if GoapUtils.state_satisfies(world_state, preconds):
 			var allowed_actions: Array = []
 			if _role_component and _role_component.has_method("get_allowed_actions"):
 				allowed_actions = _role_component.get_allowed_actions()
-			var plan = _planner.create_plan(goal["name"], world_state, allowed_actions)
+			var plan = _planner.create_plan(goal_name, world_state, allowed_actions)
 			if not plan.is_empty():
 				result.append(goal)
 	return result
