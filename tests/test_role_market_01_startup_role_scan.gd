@@ -96,7 +96,7 @@ func _test_guard_distribution_is_zeroed_but_goals_and_actions_untouched() -> voi
 
 	_assert(default_rule.get("percent", -1.0) == 0.0, "Guard's default distribution rule is zeroed")
 	_assert(guard_def.get("allowedGoals", []) == ["DefendNest", "AttackEnemy"], "Guard's allowed goals are untouched")
-	_assert(guard_def.get("allowedActions", []) == ["MoveTo"], "Guard's allowed actions are untouched")
+	_assert(guard_def.get("allowedActions", []) == [], "Guard's allowed actions are untouched (now honestly empty - GoTo is a Universal Capability, never listed)")
 	_assert(guard_def.get("priorityModifiers", {}).get("DefendNest", 0.0) == 3.0, "Guard's priority modifiers are untouched")
 
 	var target: Dictionary = om._compute_target_distribution(0, 0, 20)

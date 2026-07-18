@@ -3,10 +3,14 @@ extends Node
 
 const EAT := "Eat"
 const REST := "Rest"
-const RETURN_TO_NEST := "ReturnToNest"
 const PICKUP_FOOD := "PickupFood"
 const PICKUP_WOOD := "PickupWood"
 const DEPOSIT_RESOURCE := "DepositResource"
 const RANDOM_EXPLORE := "RandomExplore"
-const MOVE_TO := "MoveTo"
 const REPORT_RESOURCE := "ReportResource"
+
+## Base name for the grounded travel action (CONTEXT.md: GoTo). Never appears
+## alone in a plan or a role config - the Planner grounds it into "GoTo[Kind]"
+## instances (see GotoGrounding), and GoapActionExecutor dispatches on the
+## "GoTo[" prefix rather than this exact name.
+const GOTO := "GoTo"

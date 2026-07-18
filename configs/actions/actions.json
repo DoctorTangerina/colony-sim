@@ -1,11 +1,5 @@
 [
   {
-    "name": "MoveTo",
-    "cost": 1.0,
-    "preconditions": {},
-    "effects": { "at_nest": false }
-  },
-  {
     "name": "Eat",
     "cost": 2.0,
     "preconditions": { "has_food": true },
@@ -16,12 +10,6 @@
     "cost": 2.0,
     "preconditions": { "at_nest": true },
     "effects": { "low_energy": false }
-  },
-  {
-    "name": "ReturnToNest",
-    "cost": 1.5,
-    "preconditions": {},
-    "effects": { "at_nest": true }
   },
   {
     "name": "RandomExplore",

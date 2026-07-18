@@ -167,9 +167,9 @@ func _test_gatherer_can_collect_once_known_via_blackboard() -> void:
 ## Superseded by the T22 report-from-nest fix: ReportResource now requires
 ## at_nest (see tests/test_goap_t22_explorer_reports_from_nest.gd), so an
 ## Explorer that discovers a resource away from the nest must route back
-## through ReturnToNest before it can report - the Explore goal stays
-## selectable, but the plan detours home first instead of reporting on the
-## spot.
+## through the universal, grounded GoTo[Nest] before it can report - the
+## Explore goal stays selectable, but the plan detours home first instead of
+## reporting on the spot.
 func _test_explorer_can_report_away_from_nest() -> void:
 	print("[Test] Explorer discovering a resource away from the nest still gets the Explore goal, but must route home before reporting")
 	var agent = _make_agent()
@@ -181,5 +181,5 @@ func _test_explorer_can_report_away_from_nest() -> void:
 	_assert(goal.get("name", "") == "Explore", "Explore goal remains selectable away from nest (got: %s)" % [goal.get("name", "<none>")])
 
 	var plan: Array = agent._planner.create_plan("Explore", state, agent._role_component.get_allowed_actions())
-	_assert(plan.has("ReturnToNest"), "Plan routes the Explorer home before it can report (got: %s)" % [plan])
+	_assert(plan.has("GoTo[Nest]"), "Plan routes the Explorer home before it can report (got: %s)" % [plan])
 	_assert(plan.has("ReportResource"), "Plan still includes ReportResource, now gated on at_nest (got: %s)" % [plan])

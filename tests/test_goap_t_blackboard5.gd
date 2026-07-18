@@ -18,7 +18,7 @@ func _ready() -> void:
 	_test_world_state_known_food_position()
 	_test_world_state_known_wood_position()
 	_test_world_state_no_known_positions()
-	_test_move_to_uses_known_food_position()
+	_test_goto_food_uses_known_food_position()
 	_test_pickup_food_uses_known_position_fallback()
 	_test_agent_world_state_reads_blackboard()
 	_test_nest_periodic_cleanup()
@@ -198,8 +198,12 @@ func _test_world_state_no_known_positions() -> void:
 	_assert(state.known_wood_position == false, "Default known_wood_position is false")
 
 
-func _test_move_to_uses_known_food_position() -> void:
-	print("[Test] MoveTo executor uses known food positions as fallback")
+## GoTo's execution-time destination binding (CONTEXT.md: GoTo) - a grounded
+## "GoTo[Food]" plan step resolves to the nearest known Food position, the
+## same known-position fallback the old MoveTo action used to reach via a
+## vague, ungrounded guess.
+func _test_goto_food_uses_known_food_position() -> void:
+	print("[Test] GoTo[Food] executor uses known food positions")
 	var agent_script = preload("res://agents/agent.gd")
 	var agent = agent_script.new()
 	agent.set("agent_id", "test_agent")
@@ -208,8 +212,6 @@ func _test_move_to_uses_known_food_position() -> void:
 	agent.set("hunger", 0.0)
 	agent.set("nest_ref", null)
 
-	var move_called := false
-	var move_target := Vector2.ZERO
 	var agent_script2 = GDScript.new()
 	agent_script2.source_code = """extends IAgentActions
 
@@ -245,7 +247,7 @@ func get_known_positions() -> Dictionary:
 	agent.set_script(agent_script2)
 	agent.set("nest_ref", null)
 
-	GoapActionExecutor.execute_action("MoveTo", agent)
+	GoapActionExecutor.execute_action("GoTo[Food]", agent)
 	_assert(agent._move_called == true, "move_to was called")
 	_assert(agent._move_target.distance_to(Vector2(400, 500)) < 1.0, "Moved to known food position")
 

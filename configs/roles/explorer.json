@@ -4,16 +4,13 @@
     "Explore"
   ],
   "allowedActions": [
-    "MoveTo",
     "RandomExplore",
-    "ReportResource",
-    "ReturnToNest"
+    "ReportResource"
   ],
   "priorityModifiers": {
     "Explore": 2.0,
     "Eat": 0.5,
-    "Rest": 0.5,
-    "ReturnToNest": 0.5
+    "Rest": 0.5
   },
   "distribution": {
     "rules": [

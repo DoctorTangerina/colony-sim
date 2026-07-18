@@ -138,14 +138,26 @@ func _forward_search(start_state: WorldState, goal_state: Dictionary, all_action
 ## already holds in world_state. _forward_search re-checks preconditions at
 ## every node it expands, which is where that gating belongs: a precondition
 ## can become true mid-plan (e.g. ReportResource's at_nest, true only after
-## ReturnToNest runs), so pre-filtering against the start state would drop
+## GoTo[Nest] runs), so pre-filtering against the start state would drop
 ## such actions from the pool before the search ever gets a chance to chain
 ## into them.
+##
+## Universal Capabilities (UniversalCapabilities) bypass allowed_actions
+## entirely, regardless of whether that list is empty or populated - a role
+## missing GoTo could satisfy zero location-based preconditions, ever, so it
+## must be reachable even when a role's own list doesn't (and, per ADR 8,
+## never should) name it. This is layered independently of allowed_actions'
+## own empty-means-unrestricted fallback below, which stays untouched here
+## (Ticket 1's landmine note; fixing that half is Ticket 8's job).
 func _get_applicable_actions(_world_state: WorldState, allowed_actions: Array) -> Array:
 	var result: Array = []
 	for action in _actions:
+		var name: String = action["name"]
+		if UniversalCapabilities.is_universal_action(name):
+			result.append(action)
+			continue
 		if not allowed_actions.is_empty():
-			if not action["name"] in allowed_actions:
+			if not name in allowed_actions:
 				continue
 		result.append(action)
 	return result
@@ -173,7 +185,23 @@ func _load_configs() -> void:
 	for item in actions:
 		_actions.append(item as Dictionary)
 
+	for goto_action in GotoGrounding.build_actions(_load_resource_kinds(), WorldState.new().get_field_keys()):
+		_actions.append(goto_action)
+
 	var goals: Array = ConfigLoader.load_array("res://configs/goals/goals.json")
 	_goals.clear()
 	for item in goals:
 		_goals.append(item as Dictionary)
+
+
+## GoTo's destination kinds are never hand-listed (ADR 8): the Nest plus
+## every kind already declared in the resource registry, so adding a
+## resource kind there alone is enough to make GoTo path to it (once
+## WorldState grows the matching Sensed Fact - see GotoGrounding).
+func _load_resource_kinds() -> Array:
+	var entries: Array = ConfigLoader.load_array("res://configs/resources.json")
+	var kinds: Array = []
+	for entry in entries:
+		if entry.has("type"):
+			kinds.append(entry["type"])
+	return kinds

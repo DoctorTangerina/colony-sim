@@ -89,7 +89,7 @@ func _test_role_unassigned_empty() -> void:
 	rc.load_role("Unassigned")
 	_assert(rc.get_role_name() == "Unassigned", "Role name is Unassigned")
 	_assert(rc.get_allowed_goals().size() == 0, "Unassigned has no allowed goals")
-	_assert(rc.get_allowed_actions().size() == 3, "Unassigned has only global actions")
+	_assert(rc.get_allowed_actions().size() == 2, "Unassigned has only global actions")
 
 
 func _test_global_actions_always_included() -> void:
@@ -98,7 +98,6 @@ func _test_global_actions_always_included() -> void:
 	rc.load_role("Explorer")
 	var actions = rc.get_allowed_actions()
 	_assert("Eat" in actions, "Explorer has Eat action")
-	_assert("ReturnToNest" in actions, "Explorer has ReturnToNest action")
 	_assert("Rest" in actions, "Explorer has Rest action")
 
 

@@ -105,10 +105,10 @@ func _check_death() -> void:
 
 
 func _build_world_state() -> WorldState:
-	var at_nest := false
-	if nest_ref:
-		var dist := global_position.distance_to(nest_ref.global_position)
-		at_nest = dist < 50.0
+	# The Nest's TriggerZone is the single "at the nest" definition
+	# (CONTEXT.md: Nest) - _nest_zone is only null for bare-script test
+	# agents that skip the scene's _ready()/setup() entirely.
+	var at_nest: bool = _nest_zone.is_in_nest_zone() if _nest_zone else false
 
 	var food_visible := false
 	var wood_visible := false

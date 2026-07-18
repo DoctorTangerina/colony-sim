@@ -9,6 +9,9 @@ static var _registry: Dictionary = {}
 
 
 static func execute_action(action_name: String, agent: IAgentActions) -> void:
+	if action_name.begins_with(GoapActions.GOTO + "["):
+		_goto(action_name, agent)
+		return
 	_ensure_registry()
 	var handler: Callable = _registry.get(action_name, _default_handler)
 	handler.call(agent)
@@ -19,8 +22,6 @@ static func _ensure_registry() -> void:
 		return
 	_registry[GoapActions.EAT] = _eat
 	_registry[GoapActions.REST] = _rest
-	_registry[GoapActions.RETURN_TO_NEST] = _return_to_nest
-	_registry[GoapActions.MOVE_TO] = _move_to_best_target
 	_registry[GoapActions.PICKUP_FOOD] = _pickup_food
 	_registry[GoapActions.PICKUP_WOOD] = _pickup_wood
 	_registry[GoapActions.DEPOSIT_RESOURCE] = _deposit_resource
@@ -40,10 +41,6 @@ static func _eat(agent: IAgentActions) -> void:
 static func _rest(agent: IAgentActions) -> void:
 	agent.restore_energy(40.0)
 	agent.complete_action()
-
-
-static func _return_to_nest(agent: IAgentActions) -> void:
-	agent.move_to(agent.get_nest_position())
 
 
 static func _pickup_food(agent: IAgentActions) -> void:
@@ -73,16 +70,20 @@ static func _pickup_resource(resource_type: String, agent: IAgentActions) -> voi
 	agent.complete_action()
 
 
-static func _move_to_best_target(agent: IAgentActions) -> void:
+## Dispatches a grounded "GoTo[Kind]" plan step (GotoGrounding). The concrete
+## instance is chosen here, once, at execution start - not re-picked mid-walk
+## (Session 3's frozen-target decision; Navigator just walks to whatever
+## move_to() was last called with).
+static func _goto(action_name: String, agent: IAgentActions) -> void:
+	var kind := action_name.trim_prefix(GoapActions.GOTO + "[").trim_suffix("]")
+	if kind == GotoGrounding.NEST_KIND:
+		agent.move_to(agent.get_nest_position())
+		return
 	var known_positions: Dictionary = agent.get_known_positions()
-
-	if known_positions.has("Food") and known_positions["Food"].size() > 0:
-		agent.move_to(known_positions["Food"][0])
+	if known_positions.has(kind) and known_positions[kind].size() > 0:
+		agent.move_to(known_positions[kind][0])
 		return
-	if known_positions.has("Wood") and known_positions["Wood"].size() > 0:
-		agent.move_to(known_positions["Wood"][0])
-		return
-	agent.move_to(agent.get_nest_position())
+	agent.complete_action()
 
 
 static func _explore(agent: IAgentActions) -> void:

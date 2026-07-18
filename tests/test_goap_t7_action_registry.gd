@@ -10,7 +10,7 @@ func _ready() -> void:
 
 	_test_eat_reduces_hunger_and_completes()
 	_test_rest_restores_energy_and_completes()
-	_test_return_to_nest_moves_to_nest_position()
+	_test_goto_nest_moves_to_nest_position()
 	_test_deposit_resource_deposits_and_completes()
 	_test_pickup_wood_moves_to_nearest_wood()
 	_test_random_explore_moves_within_bounds()
@@ -95,11 +95,11 @@ func _test_rest_restores_energy_and_completes() -> void:
 	_assert(agent._completed, "complete_action called")
 
 
-func _test_return_to_nest_moves_to_nest_position() -> void:
-	print("[Test] ReturnToNest moves to the nest position")
+func _test_goto_nest_moves_to_nest_position() -> void:
+	print("[Test] GoTo[Nest] moves to the nest position")
 	var agent = _make_mock_agent()
 	agent.nest_ref = Node2D.new()
-	GoapActionExecutor.execute_action("ReturnToNest", agent)
+	GoapActionExecutor.execute_action("GoTo[Nest]", agent)
 	_assert(agent._move_called, "move_to was called")
 	_assert(agent._move_target.distance_to(Vector2(576, 324)) < 1.0, "Moved to nest position")
 

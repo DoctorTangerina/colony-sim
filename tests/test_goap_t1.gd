@@ -26,7 +26,7 @@ func _ready() -> void:
 
 	_test_planner_finds_eat_plan()
 	_test_planner_finds_rest_plan()
-	_test_planner_finds_return_to_nest_plan()
+	_test_planner_finds_deposit_plan_with_goto_leg_when_away_from_nest()
 	_test_planner_finds_deposit_plan()
 	_test_planner_finds_collect_food_plan()
 	_test_planner_finds_explore_plan()
@@ -67,12 +67,22 @@ func _test_planner_finds_rest_plan() -> void:
 	_assert("Rest" in plan, "Rest plan contains Rest action")
 
 
-func _test_planner_finds_return_to_nest_plan() -> void:
-	print("[Test] Planner finds ReturnToNest plan")
-	var world := WorldState.build("None", 100.0, 0.0, false, false, false)
-	var plan = planner.create_plan("ReturnToNest", world)
-	_assert(plan.size() > 0, "ReturnToNest plan is not empty")
-	_assert("ReturnToNest" in plan, "ReturnToNest plan contains ReturnToNest action")
+## The core Ticket 2 fix (ADR 5 defect #1): DepositResource's goal precondition
+## is relevance-only (has_item), never reachability - the Planner is expected
+## to chain in the universal, grounded GoTo[Nest] itself when away from the
+## nest, rather than the goal being unselectable until already there. Held
+## item is Wood, not Food: Eat also clears has_food (a pre-existing, ticket-2-
+## unrelated quirk of DepositResource's effects being expressed in terms of
+## has_food/has_wood) and ties DepositResource's cost when holding Food away
+## from the nest, which would make this test assert on an ambiguous plan.
+func _test_planner_finds_deposit_plan_with_goto_leg_when_away_from_nest() -> void:
+	print("[Test] Planner finds DepositResource plan with a GoTo[Nest] leg when away from the nest")
+	var world := WorldState.build("Wood", 100.0, 0.0, false, false, false)
+	var plan = planner.create_plan("DepositResource", world)
+	_assert(plan.size() > 0, "DepositResource plan is not empty when away from the nest")
+	_assert("GoTo[Nest]" in plan, "Plan contains a GoTo[Nest] leg")
+	_assert("DepositResource" in plan, "Plan contains DepositResource")
+	_assert(plan.find("GoTo[Nest]") < plan.find("DepositResource"), "GoTo[Nest] happens before DepositResource")
 
 
 func _test_planner_finds_deposit_plan() -> void:
@@ -109,9 +119,9 @@ func _test_planner_rejects_impossible_goal() -> void:
 func _test_planner_validate_plan() -> void:
 	print("[Test] Planner validates plan")
 	var world := WorldState.build("Food", 100.0, 0.0, false, false, false)
-	var plan := ["ReturnToNest", "Eat"]
+	var plan := ["GoTo[Nest]", "Eat"]
 	var valid = planner.validate_plan(plan, world)
-	_assert(valid, "ReturnToNest+Eat plan is valid from has_food+!at_nest")
+	_assert(valid, "GoTo[Nest]+Eat plan is valid from has_food+!at_nest")
 
 	var invalid_plan := ["DepositResource"]
 	var invalid = planner.validate_plan(invalid_plan, world)
@@ -120,7 +130,7 @@ func _test_planner_validate_plan() -> void:
 
 func _test_goal_selector_selects_eat_when_hungry() -> void:
 	print("[Test] GoalSelector selects Eat when hungry")
-	var role_component := _make_role_component(["Eat", "Rest", "ReturnToNest"], [], {})
+	var role_component := _make_role_component(["Eat", "Rest"], [], {})
 	goal_selector.set_role_component(role_component)
 
 	var world := WorldState.build("Food", 100.0, 80.0, false, false, false)
@@ -133,7 +143,7 @@ func _test_goal_selector_selects_eat_when_hungry() -> void:
 
 func _test_goal_selector_selects_rest_when_tired() -> void:
 	print("[Test] GoalSelector selects Rest when tired")
-	var role_component := _make_role_component(["Eat", "Rest", "ReturnToNest"], [], {})
+	var role_component := _make_role_component(["Eat", "Rest"], [], {})
 	goal_selector.set_role_component(role_component)
 
 	var world := WorldState.build("None", 20.0, 0.0, true, false, false)
@@ -147,7 +157,7 @@ func _test_goal_selector_selects_rest_when_tired() -> void:
 func _test_goal_selector_selects_explore_for_explorer() -> void:
 	print("[Test] GoalSelector selects Explore for Explorer role")
 	var role_component := _make_role_component(
-		["Explore", "Eat", "Rest", "ReturnToNest"],
+		["Explore", "Eat", "Rest"],
 		[],
 		{"Explore": 2.0}
 	)
@@ -165,7 +175,7 @@ func _test_goal_selector_selects_explore_for_explorer() -> void:
 func _test_goal_selector_selects_collect_for_gatherer() -> void:
 	print("[Test] GoalSelector selects Collect for Gatherer role")
 	var role_component := _make_role_component(
-		["CollectFood", "CollectWood", "DepositResource", "Eat", "Rest", "ReturnToNest"],
+		["CollectFood", "CollectWood", "DepositResource", "Eat", "Rest"],
 		[],
 		{"CollectFood": 2.0, "CollectWood": 2.0}
 	)

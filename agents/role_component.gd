@@ -2,7 +2,7 @@ extends Node
 
 signal role_changed(old_role: String, new_role: String)
 
-const GLOBAL_ACTIONS: Array = ["Eat", "ReturnToNest", "Rest"]
+const GLOBAL_ACTIONS: Array = ["Eat", "Rest"]
 
 var _role_name: String = ""
 var _allowed_goals: Array = []

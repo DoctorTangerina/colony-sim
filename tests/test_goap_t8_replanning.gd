@@ -95,9 +95,9 @@ func _test_validate_plan_rejects_plan_missing_item() -> void:
 	print("[Test] validate_plan rejects the tail of a plan once its resource precondition breaks")
 	var agent = _make_agent()
 	var world := WorldState.build("None", 100.0, 0.0, false, false, false)
-	var remaining_plan := ["ReturnToNest", "DepositResource"]
+	var remaining_plan := ["GoTo[Nest]", "DepositResource"]
 	_assert(not agent._planner.validate_plan(remaining_plan, world),
-		"ReturnToNest+DepositResource is invalid once has_item is false")
+		"GoTo[Nest]+DepositResource is invalid once has_item is false")
 
 
 func _test_agent_replans_when_resource_disappears_mid_plan() -> void:
@@ -108,7 +108,7 @@ func _test_agent_replans_when_resource_disappears_mid_plan() -> void:
 	agent.nest_ref = _make_mock_nest_with_known_positions(false, true)
 
 	agent._goap_cycle.current_goal = "CollectFood"
-	agent._goap_cycle.current_plan = ["PickupFood", "ReturnToNest", "DepositResource"]
+	agent._goap_cycle.current_plan = ["PickupFood", "GoTo[Nest]", "DepositResource"]
 	agent._goap_cycle._action_index = 0
 	agent.held_item = "None"
 
@@ -127,7 +127,7 @@ func _test_agent_falls_back_to_return_to_nest_when_no_resources_remain() -> void
 	agent.resource_manager_ref = _make_mock_resource_manager(false, false)
 
 	agent._goap_cycle.current_goal = "CollectFood"
-	agent._goap_cycle.current_plan = ["PickupFood", "ReturnToNest", "DepositResource"]
+	agent._goap_cycle.current_plan = ["PickupFood", "GoTo[Nest]", "DepositResource"]
 	agent._goap_cycle._action_index = 0
 	agent.held_item = "None"
 

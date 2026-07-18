@@ -164,8 +164,8 @@ func _test_report_resource_requires_at_nest_now() -> void:
 
 
 ## An Explorer that discovered a resource away from the nest must route back
-## through ReturnToNest before ReportResource can run - this is the actual
-## "go inform the colony" behavior the ticket asks for.
+## through the universal, grounded GoTo[Nest] before ReportResource can run -
+## this is the actual "go inform the colony" behavior the ticket asks for.
 func _test_explorer_plans_return_to_nest_before_reporting() -> void:
 	print("[Test] Explorer's plan sends it back to the nest before reporting a discovery")
 	var agent = _make_agent()
@@ -177,10 +177,10 @@ func _test_explorer_plans_return_to_nest_before_reporting() -> void:
 	_assert(goal.get("name", "") == "Explore", "Explore goal remains selectable away from nest (got: %s)" % [goal.get("name", "<none>")])
 
 	var plan: Array = agent._planner.create_plan("Explore", state, agent._role_component.get_allowed_actions())
-	_assert(plan.has("ReturnToNest"), "Plan routes the Explorer back to the nest (got: %s)" % [plan])
+	_assert(plan.has("GoTo[Nest]"), "Plan routes the Explorer back to the nest (got: %s)" % [plan])
 	_assert(plan.has("ReportResource"), "Plan still includes ReportResource (got: %s)" % [plan])
-	_assert(plan.find("ReturnToNest") < plan.find("ReportResource"),
-		"ReturnToNest happens before ReportResource (got: %s)" % [plan])
+	_assert(plan.find("GoTo[Nest]") < plan.find("ReportResource"),
+		"GoTo[Nest] happens before ReportResource (got: %s)" % [plan])
 
 
 ## End-to-end: the Blackboard (and therefore Gatherers reading known positions

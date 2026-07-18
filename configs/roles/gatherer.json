@@ -6,7 +6,6 @@
     "DepositResource"
   ],
   "allowedActions": [
-    "MoveTo",
     "PickupFood",
     "PickupWood",
     "DepositResource"
@@ -16,8 +15,7 @@
     "CollectWood": 2.0,
     "DepositResource": 2.5,
     "Eat": 0.5,
-    "Rest": 0.5,
-    "ReturnToNest": 0.5
+    "Rest": 0.5
   },
   "distribution": {
     "rules": [

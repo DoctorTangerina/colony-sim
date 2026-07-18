@@ -4,15 +4,12 @@
     "DefendNest",
     "AttackEnemy"
   ],
-  "allowedActions": [
-    "MoveTo"
-  ],
+  "allowedActions": [],
   "priorityModifiers": {
     "DefendNest": 3.0,
     "AttackEnemy": 3.0,
     "Eat": 0.5,
-    "Rest": 0.5,
-    "ReturnToNest": 0.5
+    "Rest": 0.5
   },
   "distribution": {
     "rules": [
