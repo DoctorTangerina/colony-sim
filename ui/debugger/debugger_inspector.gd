@@ -6,6 +6,7 @@ const SECTION_TITLES := {
 	"goal": "Active Goal",
 	"stats": "Agent Stats",
 	"action": "Executing Action",
+	"plan": "Plan",
 }
 
 var _sections: Array = []
@@ -22,15 +23,21 @@ var _hunger_bar: ProgressBar
 var _hunger_label: Label
 var _action_label: Label
 
+var _plan_fold: FoldableContainer
+var _plan_list: VBoxContainer
+var _plan_expanded_by_default: bool = false
+
 
 ## Builds the section list from config; call once at startup. `colors` is the
 ## debugger config's colors block, reused so the inspector matches the tree's
-## dark styling instead of Godot's default theme.
-func setup(sections: Array, colors: Dictionary = {}) -> void:
+## dark styling instead of Godot's default theme. `plan_expanded_by_default`
+## controls the Plan section's initial folded state.
+func setup(sections: Array, colors: Dictionary = {}, plan_expanded_by_default: bool = false) -> void:
 	_sections = sections
 	_text_color = Color(colors.get("text", "#e0e0e0"))
 	_panel_color = Color(colors.get("panel", "#2d2d2d"))
 	_accent_color = Color(colors.get("accent", "#4ec9b0"))
+	_plan_expanded_by_default = plan_expanded_by_default
 
 	_role_swatch = null
 	_role_label = null
@@ -40,6 +47,8 @@ func setup(sections: Array, colors: Dictionary = {}) -> void:
 	_hunger_bar = null
 	_hunger_label = null
 	_action_label = null
+	_plan_fold = null
+	_plan_list = null
 	for child in get_children():
 		child.free()
 
@@ -53,6 +62,8 @@ func setup(sections: Array, colors: Dictionary = {}) -> void:
 				add_child(_build_stats_section())
 			"action":
 				add_child(_build_action_section())
+			"plan":
+				add_child(_build_plan_section())
 
 	clear()
 
@@ -122,6 +133,14 @@ func _build_action_section() -> FoldableContainer:
 	return fold
 
 
+func _build_plan_section() -> FoldableContainer:
+	_plan_fold = _make_fold("plan")
+	_plan_fold.folded = not _plan_expanded_by_default
+	_plan_list = VBoxContainer.new()
+	_plan_fold.add_child(_plan_list)
+	return _plan_fold
+
+
 ## Populates the built sections for the selected agent. role_color comes from
 ## the caller (DebuggerUI already resolves configs/roles/*.json colors for the
 ## tree) since Agent.get_debug_info() carries the role name only, not its color.
@@ -141,6 +160,22 @@ func show_agent_info(info: Dictionary, role_color: Color) -> void:
 		_hunger_label.text = "Hunger: %.1f" % hunger
 	if _action_label:
 		_action_label.text = str(info.get("executing_action", ""))
+	if _plan_list:
+		_set_plan(info.get("plan", []))
+
+
+## Rebuilds the plan list from scratch each refresh - plans are short (a
+## handful of actions) so this is cheaper than diffing against the old list.
+## An empty plan shows an explicit placeholder rather than an empty section,
+## since a section with no visible content reads as "not refreshed yet".
+func _set_plan(plan: Array) -> void:
+	for child in _plan_list.get_children():
+		child.free()
+	if plan.is_empty():
+		_plan_list.add_child(_label("(no plan)"))
+		return
+	for action_name in plan:
+		_plan_list.add_child(_label(str(action_name)))
 
 
 ## Called when no agent is selected, or the selected agent unregisters - resets
@@ -159,3 +194,5 @@ func clear() -> void:
 		_hunger_label.text = ""
 	if _action_label:
 		_action_label.text = ""
+	if _plan_list:
+		_set_plan([])

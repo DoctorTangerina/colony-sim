@@ -142,7 +142,7 @@ func _build_inspector(config: Dictionary) -> void:
 	_inspector.name = "Inspector"
 	_anchor_band(_inspector, TREE_BOTTOM_FRACTION, 1.0)
 	add_child(_inspector)
-	_inspector.setup(sections, config.get("colors", {}))
+	_inspector.setup(sections, config.get("colors", {}), config.get("plan_expanded_by_default", false))
 
 
 func _process(delta: float) -> void:
