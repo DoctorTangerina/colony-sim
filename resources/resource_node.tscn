@@ -11,6 +11,11 @@ script = ExtResource("1")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1393676588]
 shape = SubResource("CircleShape2D_resource")
 
+[node name="NavObstacle" type="NavigationObstacle2D" parent="."]
+radius = 16.0
+avoidance_enabled = true
+avoidance_layers = 1
+
 [node name="Sprite" type="Polygon2D" parent="." unique_id=2084105086]
 color = Color(0.2, 0.7, 0.2, 1)
 polygon = PackedVector2Array(16, 0, 13.86, 8, 8, 13.86, 0, 16, -8, 13.86, -13.86, 8, -16, 0, -13.86, -8, -8, -13.86, 0, -16, 8, -13.86, 13.86, -8)
