@@ -139,7 +139,7 @@ func _test_main_scene_boots_with_settings_tab_showing_live_om_state() -> void:
 	for i in range(15):
 		await get_tree().physics_frame
 
-	var debugger: Control = main.get_node("DebuggerUI")
+	var debugger: Control = main.get_node("DebuggerLayer/DebuggerUI")
 	_assert(debugger != null, "Main.tscn resolves a DebuggerUI child node")
 	_assert(debugger._settings_panel != null, "DebuggerUI built its Settings panel")
 

@@ -210,7 +210,7 @@ func _test_main_scene_boots_with_debugger_tracking_live_agents() -> void:
 	for i in range(15):
 		await get_tree().physics_frame
 
-	var debugger: Control = main.get_node("DebuggerUI")
+	var debugger: Control = main.get_node("DebuggerLayer/DebuggerUI")
 	_assert(debugger != null, "Main.tscn resolves a DebuggerUI child node")
 	_assert(debugger._agent_items.size() == om.get_total_agent_count() and om.get_total_agent_count() > 0,
 		"Debugger tree tracks every live agent from Simulation.tscn (got %d rows for %d registered agents)" % [debugger._agent_items.size(), om.get_total_agent_count()])

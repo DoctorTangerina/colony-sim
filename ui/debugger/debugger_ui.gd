@@ -5,6 +5,12 @@ const CONFIG_PATH := "res://configs/ui/debugger.json"
 const ROLE_CONFIG_DIR := "res://configs/roles"
 const TREE_BOTTOM_FRACTION := 0.5
 
+## Backdrop-only translucency (ADR 4 / org-overlay spec) - text, fold
+## styleboxes, and every other panel element stay fully opaque so nothing
+## becomes hard to read; only the outer background dims to sense sim activity
+## behind the panel. Hardcoded, not config-driven - nothing else needs it.
+const BACKGROUND_ALPHA := 0.85
+
 const COLUMN_TITLES := {
 	"agent_id": "Agent ID",
 	"role": "Role",
@@ -72,7 +78,9 @@ func _apply_layout(config: Dictionary) -> void:
 	var colors: Dictionary = config.get("colors", {})
 	var background := ColorRect.new()
 	background.name = "Background"
-	background.color = _config_color(colors, "background", "#1e1e1e")
+	var background_color := _config_color(colors, "background", "#1e1e1e")
+	background_color.a = BACKGROUND_ALPHA
+	background.color = background_color
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
@@ -225,6 +233,20 @@ func _build_settings_tab(config: Dictionary) -> void:
 	_settings_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	settings_tab.add_child(_settings_panel)
 	_settings_panel.setup(config.get("colors", {}))
+
+
+## The testable seam for the F1 overlay toggle (ADR 4) - _unhandled_input
+## calls this rather than embedding the visibility flip inline, so the
+## behavior is exercisable directly in headless tests without simulating a
+## physical key event.
+func toggle_visibility() -> void:
+	visible = not visible
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_debugger"):
+		toggle_visibility()
+		get_viewport().set_input_as_handled()
 
 
 func _process(delta: float) -> void:

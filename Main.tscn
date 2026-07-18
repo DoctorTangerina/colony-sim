@@ -7,7 +7,9 @@
 [node name="Main" type="Node" unique_id=228080446]
 script = ExtResource("1")
 
-[node name="DebuggerUI" parent="." unique_id=691194697 instance=ExtResource("3")]
+[node name="DebuggerLayer" type="CanvasLayer" parent="." unique_id=460288103]
+
+[node name="DebuggerUI" parent="DebuggerLayer" unique_id=691194697 instance=ExtResource("3")]
 layout_mode = 3
 anchors_preset = 0
 
