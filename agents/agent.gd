@@ -34,6 +34,7 @@ var _known_positions: Dictionary = {}
 
 var _map_min: Vector2
 var _map_max: Vector2
+var _near_unreported_resource: bool = false
 
 
 func _ready() -> void:
@@ -89,6 +90,7 @@ func _process(delta: float) -> void:
 	if _is_dead:
 		return
 
+	_scan_for_discovery()
 	_navigator.process(delta)
 	_goap_cycle.process(delta)
 
@@ -110,7 +112,6 @@ func _build_world_state() -> WorldState:
 
 	var food_visible := false
 	var wood_visible := false
-	var near_unreported := false
 
 	if resource_manager_ref:
 		var food_node = resource_manager_ref.get_nearest_resource(global_position, "Food")
@@ -124,23 +125,43 @@ func _build_world_state() -> WorldState:
 		if nest_ref and nest_ref.has_method("get_blackboard"):
 			blackboard = nest_ref.get_blackboard()
 
-		if blackboard and blackboard.has_method("has_entry_at"):
-			for res_node in resource_manager_ref.get_all_resources():
-				if is_instance_valid(res_node) and global_position.distance_to(res_node.global_position) < _discovery_radius:
-					if not blackboard.has_entry_at(res_node.resource_type, res_node.global_position):
-						near_unreported = true
-						if discovered_resource_type.is_empty():
-							discovered_resource_type = res_node.resource_type
-							discovered_resource_pos = res_node.global_position
-						break
-
 		if blackboard and blackboard.has_method("get_entries"):
 			_known_positions = BlackboardSync.sync_known_positions(blackboard, resource_manager_ref)
 
+	_scan_for_discovery()
+
 	var has_known_food: bool = _known_positions.has("Food")
 	var has_known_wood: bool = _known_positions.has("Wood")
+	var has_unreported_discovery: bool = not discovered_resource_type.is_empty()
 
-	return WorldState.build(held_item, energy, hunger, at_nest, food_visible, wood_visible, near_unreported, has_known_food, has_known_wood)
+	return WorldState.build(held_item, energy, hunger, at_nest, food_visible, wood_visible,
+		_near_unreported_resource, has_known_food, has_known_wood, has_unreported_discovery)
+
+
+## Scans for a nearby resource the Blackboard doesn't know about yet and
+## captures it into discovered_resource_type/pos, which persists on the agent
+## (independent of current proximity) until ReportResource delivers it at the
+## nest. Called every frame from _process - not just at GOAP planning ticks -
+## because those ticks are seconds apart and an agent walking a straight line
+## can cross a resource's discovery radius entirely between two of them.
+func _scan_for_discovery() -> void:
+	_near_unreported_resource = false
+	if not resource_manager_ref or not nest_ref:
+		return
+	var blackboard = null
+	if nest_ref.has_method("get_blackboard"):
+		blackboard = nest_ref.get_blackboard()
+	if not blackboard or not blackboard.has_method("has_entry_at"):
+		return
+
+	for res_node in resource_manager_ref.get_all_resources():
+		if is_instance_valid(res_node) and global_position.distance_to(res_node.global_position) < _discovery_radius:
+			if not blackboard.has_entry_at(res_node.resource_type, res_node.global_position):
+				_near_unreported_resource = true
+				if discovered_resource_type.is_empty():
+					discovered_resource_type = res_node.resource_type
+					discovered_resource_pos = res_node.global_position
+				break
 
 
 func _on_arrived_at_target() -> void:

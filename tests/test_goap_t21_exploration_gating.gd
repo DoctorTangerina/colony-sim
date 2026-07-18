@@ -164,20 +164,22 @@ func _test_gatherer_can_collect_once_known_via_blackboard() -> void:
 		"Gatherer plans CollectFood off a known blackboard position (got: %s)" % [goal.get("name", "<none>")])
 
 
-## Root-cause check: ReportResource previously required at_nest AND
-## near_unreported_resource simultaneously - a combination that's nearly
-## impossible since near_unreported_resource is only true right next to the
-## undiscovered node itself. An Explorer standing next to an unreported
-## resource, away from the nest, must be able to plan+select ReportResource.
+## Superseded by the T22 report-from-nest fix: ReportResource now requires
+## at_nest (see tests/test_goap_t22_explorer_reports_from_nest.gd), so an
+## Explorer that discovers a resource away from the nest must route back
+## through ReturnToNest before it can report - the Explore goal stays
+## selectable, but the plan detours home first instead of reporting on the
+## spot.
 func _test_explorer_can_report_away_from_nest() -> void:
-	print("[Test] Explorer can report a discovered resource while away from the nest")
+	print("[Test] Explorer discovering a resource away from the nest still gets the Explore goal, but must route home before reporting")
 	var agent = _make_agent()
 	agent._role_component.load_role("Explorer")
 	agent._goal_selector.set_role_component(agent._role_component)
 
-	var state := WorldState.build("None", 100.0, 0.0, false, true, false, true)
+	var state := WorldState.build("None", 100.0, 0.0, false, true, false, true, false, false, true)
 	var goal: Dictionary = agent._goal_selector.select_goal(state)
 	_assert(goal.get("name", "") == "Explore", "Explore goal remains selectable away from nest (got: %s)" % [goal.get("name", "<none>")])
 
 	var plan: Array = agent._planner.create_plan("Explore", state, agent._role_component.get_allowed_actions())
-	_assert(plan.has("ReportResource"), "Plan includes ReportResource without requiring at_nest (got: %s)" % [plan])
+	_assert(plan.has("ReturnToNest"), "Plan routes the Explorer home before it can report (got: %s)" % [plan])
+	_assert(plan.has("ReportResource"), "Plan still includes ReportResource, now gated on at_nest (got: %s)" % [plan])

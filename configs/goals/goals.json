@@ -3,7 +3,7 @@
 	"name": "Explore",
 	"desirability": 3.0,
 	"preconditions": {},
-	"effects": { "resource_visible": true, "near_unreported_resource": false }
+	"effects": { "resource_visible": true, "has_unreported_discovery": false }
   },
   {
 	"name": "CollectFood",

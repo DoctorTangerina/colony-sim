@@ -134,15 +134,20 @@ func _forward_search(start_state: WorldState, goal_state: Dictionary, all_action
 	return []
 
 
-func _get_applicable_actions(world_state: WorldState, allowed_actions: Array) -> Array:
+## Filters by role permission only - NOT by whether the action's precondition
+## already holds in world_state. _forward_search re-checks preconditions at
+## every node it expands, which is where that gating belongs: a precondition
+## can become true mid-plan (e.g. ReportResource's at_nest, true only after
+## ReturnToNest runs), so pre-filtering against the start state would drop
+## such actions from the pool before the search ever gets a chance to chain
+## into them.
+func _get_applicable_actions(_world_state: WorldState, allowed_actions: Array) -> Array:
 	var result: Array = []
 	for action in _actions:
 		if not allowed_actions.is_empty():
 			if not action["name"] in allowed_actions:
 				continue
-		var preconds: Dictionary = action.get("preconditions", {})
-		if GoapUtils.state_satisfies(world_state, preconds):
-			result.append(action)
+		result.append(action)
 	return result
 
 

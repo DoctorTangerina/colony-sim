@@ -6,7 +6,8 @@
   "allowedActions": [
     "MoveTo",
     "RandomExplore",
-    "ReportResource"
+    "ReportResource",
+    "ReturnToNest"
   ],
   "priorityModifiers": {
     "Explore": 2.0,

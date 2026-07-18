@@ -19,6 +19,7 @@ extends Resource
 ## - near_unreported_resource (bool): agent is near a resource not yet in the Nest's Blackboard.
 ## - known_food_position (bool): the Blackboard holds at least one Food position (permanent field - Blackboard is kept, see Ticket 14).
 ## - known_wood_position (bool): the Blackboard holds at least one Wood position (permanent field - Blackboard is kept, see Ticket 14).
+## - has_unreported_discovery (bool): agent is carrying a discovered resource position it has not yet reported to the Nest (persists as the agent travels, unlike near_unreported_resource which is proximity-only).
 var at_nest: bool = false
 var has_food: bool = false
 var has_wood: bool = false
@@ -32,6 +33,7 @@ var enemy_near: bool = false
 var near_unreported_resource: bool = false
 var known_food_position: bool = false
 var known_wood_position: bool = false
+var has_unreported_discovery: bool = false
 
 
 static func build(
@@ -43,7 +45,8 @@ static func build(
 	wood_visible: bool,
 	near_unreported_resource: bool = false,
 	known_food_position: bool = false,
-	known_wood_position: bool = false
+	known_wood_position: bool = false,
+	has_unreported_discovery: bool = false
 ) -> WorldState:
 	var state := WorldState.new()
 	state.at_nest = at_nest
@@ -59,6 +62,7 @@ static func build(
 	state.near_unreported_resource = near_unreported_resource
 	state.known_food_position = known_food_position
 	state.known_wood_position = known_wood_position
+	state.has_unreported_discovery = has_unreported_discovery
 	return state
 
 
@@ -91,7 +95,7 @@ func to_dict() -> Dictionary:
 	var dict := {}
 	var fields := ["at_nest", "has_food", "has_wood", "has_item", "low_energy", "high_hunger",
 		"food_visible", "wood_visible", "resource_visible", "enemy_near", "near_unreported_resource",
-		"known_food_position", "known_wood_position"]
+		"known_food_position", "known_wood_position", "has_unreported_discovery"]
 	for field in fields:
 		dict[field] = get_field(field)
 	return dict
@@ -100,7 +104,7 @@ func to_dict() -> Dictionary:
 func get_field_keys() -> Array:
 	return ["at_nest", "has_food", "has_wood", "has_item", "low_energy", "high_hunger",
 		"food_visible", "wood_visible", "resource_visible", "enemy_near", "near_unreported_resource",
-		"known_food_position", "known_wood_position"]
+		"known_food_position", "known_wood_position", "has_unreported_discovery"]
 
 
 func get_field(key: String) -> Variant:
@@ -118,6 +122,7 @@ func get_field(key: String) -> Variant:
 		"near_unreported_resource": return near_unreported_resource
 		"known_food_position": return known_food_position
 		"known_wood_position": return known_wood_position
+		"has_unreported_discovery": return has_unreported_discovery
 		_: return null
 
 
@@ -136,3 +141,4 @@ func set_field(key: String, value: Variant) -> void:
 		"near_unreported_resource": near_unreported_resource = value
 		"known_food_position": known_food_position = value
 		"known_wood_position": known_wood_position = value
+		"has_unreported_discovery": has_unreported_discovery = value
