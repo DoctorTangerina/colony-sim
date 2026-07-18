@@ -1,21 +1,25 @@
 extends Node
 
-## Diagnostic harness for the reported bug: explorer stalls at nest, gatherer
-## beelines to undiscovered resources, gatherer skips delivering held items.
-## Not a permanent regression test - see Phase 1 of the diagnosing-bugs skill.
+## Regression coverage for the exploration-gating fix: food_visible/wood_visible
+## must be proximity-gated (not "exists anywhere on the map"), Collect/Pickup
+## goals+actions must key off blackboard-known positions rather than raw
+## visibility, ReportResource must not require at_nest, and a Gatherer holding
+## an item must prioritize DepositResource over starting a new collection.
 
 var tests_passed: int = 0
 var tests_failed: int = 0
 
 
 func _ready() -> void:
-	print("=== Bug Diagnostic: Resource Visibility / Exploration Gating ===")
+	print("=== GOAP T21 Test Harness (Exploration Gating) ===")
 	print("")
 
 	_test_food_visible_ignores_distance()
 	_test_explorer_gets_no_goal_when_undiscovered_resource_exists()
 	_test_gatherer_can_collect_undiscovered_resource_directly()
 	_test_gatherer_deprioritizes_deposit_vs_new_collection()
+	_test_gatherer_can_collect_once_known_via_blackboard()
+	_test_explorer_can_report_away_from_nest()
 
 	print("")
 	print("=== Results: %d passed, %d failed ===" % [tests_passed, tests_failed])
@@ -130,16 +134,50 @@ func _test_gatherer_can_collect_undiscovered_resource_directly() -> void:
 
 
 ## Once holding an item, a Gatherer that also has a second resource type
-## "visible" should prefer delivering the held item over collecting more -
-## priorityModifiers currently score CollectWood (2.0*5=10) above
-## DepositResource (1.5*6=9).
+## known via the blackboard should prefer delivering the held item over
+## collecting more - priorityModifiers must score DepositResource above
+## CollectWood/CollectFood so agents actually return items to the nest.
 func _test_gatherer_deprioritizes_deposit_vs_new_collection() -> void:
-	print("[Test] Gatherer holding Food should prefer DepositResource over starting CollectWood")
+	print("[Test] Gatherer holding Food at the nest should prefer DepositResource over starting CollectWood")
 	var agent = _make_agent()
 	agent._role_component.load_role("Gatherer")
 	agent._goal_selector.set_role_component(agent._role_component)
 
-	var state := WorldState.build("Food", 100.0, 0.0, false, false, true)
+	var state := WorldState.build("Food", 100.0, 0.0, true, false, false, false, false, true)
 	var goal: Dictionary = agent._goal_selector.select_goal(state)
 	_assert(goal.get("name", "") == "DepositResource",
 		"Gatherer prioritizes DepositResource while holding an item (got: %s)" % [goal.get("name", "<none>")])
+
+
+## Positive case for the known_food_position re-key: a Gatherer must still be
+## able to plan a collection once the blackboard actually knows a position,
+## even though it isn't currently food_visible (proximity-based) yet.
+func _test_gatherer_can_collect_once_known_via_blackboard() -> void:
+	print("[Test] Gatherer can plan CollectFood once a position is known via the blackboard")
+	var agent = _make_agent()
+	agent._role_component.load_role("Gatherer")
+	agent._goal_selector.set_role_component(agent._role_component)
+
+	var state := WorldState.build("None", 100.0, 0.0, false, false, false, false, true, false)
+	var goal: Dictionary = agent._goal_selector.select_goal(state)
+	_assert(goal.get("name", "") == "CollectFood",
+		"Gatherer plans CollectFood off a known blackboard position (got: %s)" % [goal.get("name", "<none>")])
+
+
+## Root-cause check: ReportResource previously required at_nest AND
+## near_unreported_resource simultaneously - a combination that's nearly
+## impossible since near_unreported_resource is only true right next to the
+## undiscovered node itself. An Explorer standing next to an unreported
+## resource, away from the nest, must be able to plan+select ReportResource.
+func _test_explorer_can_report_away_from_nest() -> void:
+	print("[Test] Explorer can report a discovered resource while away from the nest")
+	var agent = _make_agent()
+	agent._role_component.load_role("Explorer")
+	agent._goal_selector.set_role_component(agent._role_component)
+
+	var state := WorldState.build("None", 100.0, 0.0, false, true, false, true)
+	var goal: Dictionary = agent._goal_selector.select_goal(state)
+	_assert(goal.get("name", "") == "Explore", "Explore goal remains selectable away from nest (got: %s)" % [goal.get("name", "<none>")])
+
+	var plan: Array = agent._planner.create_plan("Explore", state, agent._role_component.get_allowed_actions())
+	_assert(plan.has("ReportResource"), "Plan includes ReportResource without requiring at_nest (got: %s)" % [plan])

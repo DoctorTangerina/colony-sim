@@ -60,8 +60,9 @@ static func _deposit_resource(agent: IAgentActions) -> void:
 
 
 static func _pickup_resource(resource_type: String, agent: IAgentActions) -> void:
-	var node: Node = agent.get_nearest_resource(agent.get_agent_position(), resource_type)
-	if node and is_instance_valid(node):
+	var agent_pos: Vector2 = agent.get_agent_position()
+	var node: Node = agent.get_nearest_resource(agent_pos, resource_type)
+	if node and is_instance_valid(node) and agent_pos.distance_to(node.global_position) < agent.get_discovery_radius():
 		agent.set_target_resource(node)
 		agent.move_to(node.global_position)
 		return

@@ -32,19 +32,19 @@
   {
     "name": "ReportResource",
     "cost": 0.3,
-    "preconditions": { "at_nest": true, "near_unreported_resource": true },
+    "preconditions": { "near_unreported_resource": true },
     "effects": { "near_unreported_resource": false }
   },
   {
     "name": "PickupFood",
     "cost": 1.0,
-    "preconditions": { "food_visible": true },
+    "preconditions": { "known_food_position": true },
     "effects": { "has_food": true }
   },
   {
     "name": "PickupWood",
     "cost": 1.0,
-    "preconditions": { "wood_visible": true },
+    "preconditions": { "known_wood_position": true },
     "effects": { "has_wood": true }
   },
   {

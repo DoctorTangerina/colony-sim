@@ -114,10 +114,10 @@ func _build_world_state() -> WorldState:
 
 	if resource_manager_ref:
 		var food_node = resource_manager_ref.get_nearest_resource(global_position, "Food")
-		if food_node and is_instance_valid(food_node):
+		if food_node and is_instance_valid(food_node) and global_position.distance_to(food_node.global_position) < _discovery_radius:
 			food_visible = true
 		var wood_node = resource_manager_ref.get_nearest_resource(global_position, "Wood")
-		if wood_node and is_instance_valid(wood_node):
+		if wood_node and is_instance_valid(wood_node) and global_position.distance_to(wood_node.global_position) < _discovery_radius:
 			wood_visible = true
 
 		var blackboard = null
@@ -228,6 +228,10 @@ func clear_discovered_resource() -> void:
 
 func get_world_bounds() -> Rect2:
 	return Rect2(_map_min, _map_max - _map_min)
+
+
+func get_discovery_radius() -> float:
+	return _discovery_radius
 
 
 func get_role_component() -> Node:

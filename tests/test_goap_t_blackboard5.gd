@@ -250,10 +250,27 @@ func get_known_positions() -> Dictionary:
 	_assert(agent._move_target.distance_to(Vector2(400, 500)) < 1.0, "Moved to known food position")
 
 
+## Overrides move_to (via script inheritance) instead of using agent.gd's real
+## implementation, which reaches into a $Navigator child that doesn't exist on
+## a bare .new() agent with no scene children.
+func _make_mock_agent_recording_move_to() -> Node:
+	var agent_script := GDScript.new()
+	agent_script.source_code = """extends \"res://agents/agent.gd\"
+
+var _move_called: bool = false
+var _move_target: Vector2 = Vector2.ZERO
+
+func move_to(target: Vector2) -> void:
+	_move_called = true
+	_move_target = target
+"""
+	agent_script.reload()
+	return agent_script.new()
+
+
 func _test_pickup_food_uses_known_position_fallback() -> void:
-	print("[Test] PickupFood uses known positions when resource not visible")
-	var agent_script = preload("res://agents/agent.gd")
-	var agent = agent_script.new()
+	print("[Test] PickupFood uses known positions when resource not visible, not yet the far real one")
+	var agent = _make_mock_agent_recording_move_to()
 	agent.set("agent_id", "test_agent")
 	agent.set("held_item", "None")
 	agent.set("energy", 100.0)
@@ -268,7 +285,10 @@ func _test_pickup_food_uses_known_position_fallback() -> void:
 	agent.set("_known_positions", {"Food": [known_pos]})
 
 	GoapActionExecutor.execute_action("PickupFood", agent)
-	_assert(agent.get("target_resource") != null, "Target resource set from known position")
+	_assert(agent.get("target_resource") == null,
+		"Target resource stays unset until the agent is actually within discovery range of the real node")
+	_assert(agent.get("_move_called") and agent.get("_move_target").distance_to(known_pos) < 1.0,
+		"Agent travels toward the known (blackboard-reported) food position first")
 
 
 func _test_agent_world_state_reads_blackboard() -> void:

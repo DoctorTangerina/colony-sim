@@ -14,7 +14,7 @@
   "priorityModifiers": {
     "CollectFood": 2.0,
     "CollectWood": 2.0,
-    "DepositResource": 1.5,
+    "DepositResource": 2.5,
     "Eat": 0.5,
     "Rest": 0.5,
     "ReturnToNest": 0.5

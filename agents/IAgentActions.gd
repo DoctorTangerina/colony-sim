@@ -67,3 +67,7 @@ func get_world_bounds() -> Rect2:
 
 func deposit_at_nest(_item_type: String) -> void:
 	pass
+
+
+func get_discovery_radius() -> float:
+	return 0.0

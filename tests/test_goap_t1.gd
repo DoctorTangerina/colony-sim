@@ -85,7 +85,7 @@ func _test_planner_finds_deposit_plan() -> void:
 
 func _test_planner_finds_collect_food_plan() -> void:
 	print("[Test] Planner finds CollectFood plan")
-	var world := WorldState.build("None", 100.0, 0.0, false, true, false)
+	var world := WorldState.build("None", 100.0, 0.0, false, false, false, false, true, false)
 	var plan = planner.create_plan("CollectFood", world)
 	_assert(plan.size() > 0, "CollectFood plan is not empty")
 	_assert("PickupFood" in plan, "CollectFood plan contains PickupFood action")
@@ -171,7 +171,7 @@ func _test_goal_selector_selects_collect_for_gatherer() -> void:
 	)
 	goal_selector.set_role_component(role_component)
 
-	var world := WorldState.build("None", 100.0, 0.0, false, true, false)
+	var world := WorldState.build("None", 100.0, 0.0, false, false, false, false, true, false)
 	var goal = goal_selector.select_goal(world)
 	_assert(not goal.is_empty(), "GoalSelector found a goal")
 	var goal_name = goal.get("name", "")

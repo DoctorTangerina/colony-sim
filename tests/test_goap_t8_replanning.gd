@@ -48,6 +48,13 @@ func get_nearest_resource(_pos: Vector2, resource_type: String) -> Node:
 
 func get_all_resources() -> Array:
 	return []
+
+func resource_exists_at(resource_type: String, _position: Vector2) -> bool:
+	if resource_type == "Food":
+		return food_visible
+	if resource_type == "Wood":
+		return wood_visible
+	return false
 """
 	script.reload()
 	var rm = script.new()
@@ -68,6 +75,22 @@ func get_all_resources() -> Array:
 	return rm
 
 
+## The Gatherer's Collect goals now key off the blackboard (known_food_position/
+## known_wood_position), not raw visibility - see the exploration-gating fix.
+## This mirrors the resource manager's food_visible/wood_visible flags into
+## real blackboard entries at the same positions so replanning tests still
+## exercise a resource that's actually "known" to the colony.
+func _make_mock_nest_with_known_positions(food_known: bool, wood_known: bool) -> Node2D:
+	var nest = preload("res://organization/Nest.tscn").instantiate()
+	add_child(nest)
+	var blackboard = nest.get_blackboard()
+	if food_known:
+		blackboard.add_entry("Food", Vector2(100, 100))
+	if wood_known:
+		blackboard.add_entry("Wood", Vector2(200, 200))
+	return nest
+
+
 func _test_validate_plan_rejects_plan_missing_item() -> void:
 	print("[Test] validate_plan rejects the tail of a plan once its resource precondition breaks")
 	var agent = _make_agent()
@@ -82,6 +105,7 @@ func _test_agent_replans_when_resource_disappears_mid_plan() -> void:
 	var agent = _make_agent()
 	agent._role_component.load_role("Gatherer")
 	agent.resource_manager_ref = _make_mock_resource_manager(false, true)
+	agent.nest_ref = _make_mock_nest_with_known_positions(false, true)
 
 	agent._goap_cycle.current_goal = "CollectFood"
 	agent._goap_cycle.current_plan = ["PickupFood", "ReturnToNest", "DepositResource"]
