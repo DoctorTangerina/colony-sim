@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/test_debugger_ui_06_scale_performance.gd" id="1"]
+
+[node name="TestDebuggerUi06ScalePerformance" type="Node"]
+script = ExtResource("1")
