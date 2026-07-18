@@ -10,6 +10,7 @@ docs/*
 .scratch/*
 .claude/*
 AGENTS.md
+CLAUDE.md
 CONTEXT.md
 CODE_REVIEW.md
 tickets.md
