@@ -237,6 +237,43 @@ func get_death_count() -> int:
 	return _death_counter
 
 
+## Single-snapshot dict for the debugger UI, mirroring Agent.get_debug_info()'s
+## convention so callers never reach into OM internals or query the Nest
+## directly. Storage and role-market fields (role_counts, cached_targets,
+## pending_requests) report zeros/empty rather than erroring when _nest_ref
+## hasn't been wired via setup() yet - the same posture the UI already takes
+## toward not-yet-registered agents. Settings and the role-change log don't
+## depend on the Nest, so they always report their true state. Death counter
+## is deliberately excluded (out of scope).
+func get_debug_info() -> Dictionary:
+	var role_names: Array = _role_defs.keys()
+	if not role_names.has("Unassigned"):
+		role_names.append("Unassigned")
+
+	var storage: Dictionary = {"Food": 0, "Wood": 0}
+	var role_counts: Dictionary = {}
+	var cached_targets: Dictionary = {}
+	var pending_requests: Dictionary = {}
+
+	if _nest_ref != null:
+		storage = _nest_ref.get_storage_summary()
+		for role_name in role_names:
+			role_counts[role_name] = get_role_count(role_name)
+			cached_targets[role_name] = get_cached_target(role_name)
+			pending_requests[role_name] = get_request_count(role_name)
+
+	return {
+		"storage": storage,
+		"role_counts": role_counts,
+		"cached_targets": cached_targets,
+		"pending_requests": pending_requests,
+		"dynamic_roles_enabled": _dynamic_roles_enabled,
+		"role_cooldown": _role_cooldown,
+		"min_unassigned_threshold": _min_unassigned_threshold,
+		"role_change_log": get_role_change_log(),
+	}
+
+
 func get_threshold(resource_type: String, key: String, default_val: int = 0) -> int:
 	var thresh: Dictionary = _thresholds.get(resource_type, {})
 	return thresh.get(key, default_val)

@@ -9,6 +9,7 @@ func _ready() -> void:
 	print("")
 
 	await _test_panel_width_from_config()
+	await _test_agent_tab_present_in_tab_container()
 	await _test_tree_columns_from_config()
 	await _test_rows_added_on_registration_with_role_color()
 	await _test_rows_removed_on_unregistration()
@@ -61,12 +62,35 @@ func _test_panel_width_from_config() -> void:
 	await get_tree().process_frame
 
 
+## DebuggerUI wraps a TabContainer per ticket 1 (debugger-ui-org-overlay); the
+## Agent tab is the first tab and houses the same Tree + Inspector that used
+## to sit directly on the panel. Later tickets (Organization/Log/Settings)
+## add more tabs alongside it, so this asserts the wrapping shape and the
+## Agent tab's fixed first position without pinning the total tab count.
+func _test_agent_tab_present_in_tab_container() -> void:
+	print("[Test] DebuggerUI wraps a TabContainer with an 'Agent' tab holding the Tree and Inspector")
+	var debugger := _make_debugger()
+
+	var tabs: TabContainer = debugger.get_node("Tabs")
+	_assert(tabs != null, "DebuggerUI has a TabContainer child")
+	_assert(tabs.get_tab_count() >= 1, "At least one tab present (got %d)" % tabs.get_tab_count())
+	_assert(tabs.get_tab_title(0) == "Agent", "The first tab is titled 'Agent' (got: %s)" % tabs.get_tab_title(0))
+
+	var agent_tab: Control = tabs.get_tab_control(0)
+	_assert(agent_tab.name == "Agent", "Agent tab control is named 'Agent'")
+	_assert(debugger._tree.get_parent() == agent_tab, "Tree lives inside the Agent tab")
+	_assert(debugger._inspector.get_parent() == agent_tab, "Inspector lives inside the Agent tab")
+
+	debugger.queue_free()
+	await get_tree().process_frame
+
+
 func _test_tree_columns_from_config() -> void:
 	print("[Test] Tree columns come from the tree_columns config")
 	var config: Dictionary = ConfigLoader.load_dict("res://configs/ui/debugger.json")
 	var debugger := _make_debugger()
 
-	var tree: Tree = debugger.get_node("AgentTree")
+	var tree: Tree = debugger._tree
 	_assert(tree.columns == config.get("tree_columns", []).size(), "Tree column count matches config (got: %s)" % tree.columns)
 
 	debugger.queue_free()

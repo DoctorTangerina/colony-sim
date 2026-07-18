@@ -17,12 +17,17 @@ var _update_timer: float = 0.0
 var _role_colors: Dictionary = {}
 var _default_role_color: Color = Color("#888888")
 
+var _tabs: TabContainer
+var _agent_tab: Control
+
 var _tree: Tree
 var _tree_root: TreeItem
 var _agent_items: Dictionary = {}
 
 var _inspector: DebuggerInspector
 var _selected_agent_id: String = ""
+
+var _org_panel: DebuggerOrgPanel
 
 @onready var _om: Node = get_node("/root/OrganizationManager")
 
@@ -31,8 +36,10 @@ func _ready() -> void:
 	var config: Dictionary = ConfigLoader.load_dict(CONFIG_PATH)
 	_apply_layout(config)
 	_load_role_colors(config)
+	_build_tabs()
 	_build_tree(config)
 	_build_inspector(config)
+	_build_organization_tab(config)
 	_update_interval = 1.0 / maxf(config.get("update_hz", 5.0), 0.001)
 
 	_om.agent_registered.connect(_on_agent_registered)
@@ -108,6 +115,22 @@ func _load_role_colors(config: Dictionary) -> void:
 	dir.list_dir_end()
 
 
+## The Agent tab is today's only tab - the Tree + Inspector move inside it
+## unchanged, so future tabs (Organization/Log/Settings) plug in as siblings
+## without touching this one's internals.
+func _build_tabs() -> void:
+	_tabs = TabContainer.new()
+	_tabs.name = "Tabs"
+	_tabs.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_tabs)
+
+	_agent_tab = Control.new()
+	_agent_tab.name = "Agent"
+	_agent_tab.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tabs.add_child(_agent_tab)
+	_tabs.set_tab_title(0, "Agent")
+
+
 func _build_tree(config: Dictionary) -> void:
 	_columns = config.get("tree_columns", ["agent_id", "role", "action"])
 	var colors: Dictionary = config.get("colors", {})
@@ -132,7 +155,7 @@ func _build_tree(config: Dictionary) -> void:
 	# are wired anywhere in this panel, per the mouse/touch-only requirement.
 	_tree.item_selected.connect(_on_tree_item_selected)
 
-	add_child(_tree)
+	_agent_tab.add_child(_tree)
 	_tree_root = _tree.create_item()
 
 
@@ -141,8 +164,27 @@ func _build_inspector(config: Dictionary) -> void:
 	_inspector = DebuggerInspector.new()
 	_inspector.name = "Inspector"
 	_anchor_band(_inspector, TREE_BOTTOM_FRACTION, 1.0)
-	add_child(_inspector)
+	_agent_tab.add_child(_inspector)
 	_inspector.setup(sections, config.get("colors", {}), config.get("plan_expanded_by_default", false))
+
+
+## The Organization tab sources everything from a single
+## OrganizationManager.get_debug_info() snapshot (ticket 2) - no separate Nest
+## query needed. Sections are config-gated by org_sections, mirroring how
+## inspector_sections gates the Agent tab.
+func _build_organization_tab(config: Dictionary) -> void:
+	var org_tab := Control.new()
+	org_tab.name = "Organization"
+	org_tab.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tabs.add_child(org_tab)
+	_tabs.set_tab_title(1, "Organization")
+
+	var sections: Array = config.get("org_sections", ["storage", "role_market"])
+	_org_panel = DebuggerOrgPanel.new()
+	_org_panel.name = "OrgPanel"
+	_org_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	org_tab.add_child(_org_panel)
+	_org_panel.setup(sections, config.get("colors", {}))
 
 
 func _process(delta: float) -> void:
@@ -152,6 +194,7 @@ func _process(delta: float) -> void:
 	_update_timer = 0.0
 	_refresh_all_rows()
 	_refresh_inspector()
+	_refresh_org_panel()
 
 
 func _refresh_all_rows() -> void:
@@ -170,6 +213,10 @@ func _refresh_inspector() -> void:
 		return
 	var info: Dictionary = node.get_debug_info()
 	_inspector.show_agent_info(info, _role_colors.get(info.get("role", ""), _default_role_color))
+
+
+func _refresh_org_panel() -> void:
+	_org_panel.show_org_info(_om.get_debug_info())
 
 
 func _on_tree_item_selected() -> void:
