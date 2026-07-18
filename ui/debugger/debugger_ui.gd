@@ -31,6 +31,8 @@ var _org_panel: DebuggerOrgPanel
 
 var _log_panel: DebuggerLogPanel
 
+var _settings_panel: DebuggerSettingsPanel
+
 @onready var _om: Node = get_node("/root/OrganizationManager")
 
 
@@ -43,6 +45,7 @@ func _ready() -> void:
 	_build_inspector(config)
 	_build_organization_tab(config)
 	_build_log_tab(config)
+	_build_settings_tab(config)
 	_update_interval = 1.0 / maxf(config.get("update_hz", 5.0), 0.001)
 
 	_om.agent_registered.connect(_on_agent_registered)
@@ -207,6 +210,23 @@ func _build_log_tab(config: Dictionary) -> void:
 	_log_panel.setup(config.get("colors", {}))
 
 
+## The Settings tab has no fold wrapper (same rationale as Log) and no config
+## gating - unlike Organization's sections, there's nothing to opt in or out
+## of for a fixed set of three read-only knobs.
+func _build_settings_tab(config: Dictionary) -> void:
+	var settings_tab := Control.new()
+	settings_tab.name = "Settings"
+	settings_tab.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tabs.add_child(settings_tab)
+	_tabs.set_tab_title(_tabs.get_tab_count() - 1, "Settings")
+
+	_settings_panel = DebuggerSettingsPanel.new()
+	_settings_panel.name = "SettingsPanel"
+	_settings_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	settings_tab.add_child(_settings_panel)
+	_settings_panel.setup(config.get("colors", {}))
+
+
 func _process(delta: float) -> void:
 	_update_timer += delta
 	if _update_timer < _update_interval:
@@ -235,12 +255,13 @@ func _refresh_inspector() -> void:
 	_inspector.show_agent_info(info, _role_colors.get(info.get("role", ""), _default_role_color))
 
 
-## Ticket 2's single OM snapshot backs both the Organization tab and the Log
-## tab, so a refresh tick never queries the OM twice for the same data.
+## Ticket 2's single OM snapshot backs the Organization, Log, and Settings
+## tabs, so a refresh tick never queries the OM twice for the same data.
 func _refresh_organization_state() -> void:
 	var info: Dictionary = _om.get_debug_info()
 	_org_panel.show_org_info(info)
 	_log_panel.show_log_info(info.get("role_change_log", []))
+	_settings_panel.show_settings_info(info)
 
 
 func _on_tree_item_selected() -> void:
