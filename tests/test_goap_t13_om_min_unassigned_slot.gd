@@ -77,7 +77,7 @@ func _test_ten_agents_abundant_resources_still_request_unassigned() -> void:
 
 
 func _test_evaluate_roles_posts_explorer_and_unassigned_requests_for_large_population() -> void:
-	print("[Test] _evaluate_roles posts both Explorer and Unassigned requests for a large, well-fed population")
+	print("[Test] _evaluate_roles posts Unassigned requests but no excess Explorer requests once holders already meet target")
 	var om = _make_om_with_role_defs()
 
 	var nest = preload("res://organization/Nest.tscn").instantiate()
@@ -92,5 +92,5 @@ func _test_evaluate_roles_posts_explorer_and_unassigned_requests_for_large_popul
 
 	om._evaluate_roles()
 
-	_assert(om.get_request_count("Explorer") >= 1, "Explorer requests posted (got %d)" % om.get_request_count("Explorer"))
+	_assert(om.get_request_count("Explorer") == 0, "No Explorer requests posted - 10 holders already exceed the target of 4 (got %d)" % om.get_request_count("Explorer"))
 	_assert(om.get_request_count("Unassigned") >= 1, "Unassigned request posted (got %d)" % om.get_request_count("Unassigned"))

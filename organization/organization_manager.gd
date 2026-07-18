@@ -1,5 +1,7 @@
 extends Node
 
+const ROLE_CONFIG_DIR := "res://configs/roles"
+
 signal role_request_posted(role_name: String)
 signal role_request_fulfilled(agent_id: String, role_name: String)
 signal agent_registered(agent_id: String, role: String)
@@ -19,11 +21,13 @@ var _min_unassigned_threshold: int = 5
 var _nest_ref: Node = null
 var _thresholds: Dictionary = {}
 var _role_defs: Dictionary = {}
+var _cached_targets: Dictionary = {}
 
 
 func _ready() -> void:
 	_load_config()
 	_load_nest_thresholds()
+	_load_role_defs()
 
 
 func _process(delta: float) -> void:
@@ -63,6 +67,29 @@ func _load_nest_thresholds() -> void:
 	_thresholds = data.get("thresholds", {})
 
 
+## Discovers every role definition JSON under ROLE_CONFIG_DIR so the Threshold
+## Policy always evaluates the full set of defined roles - adding a role is a
+## JSON-only change, no engine caller needs updating. Unassigned has no JSON
+## file and is never part of this scan; its floor is applied separately in
+## _compute_target_distribution.
+func _load_role_defs() -> void:
+	var dir := DirAccess.open(ROLE_CONFIG_DIR)
+	if dir == null:
+		push_error("OrganizationManager: could not open role config directory: %s" % ROLE_CONFIG_DIR)
+		return
+
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".json"):
+			var data: Dictionary = ConfigLoader.load_dict("%s/%s" % [ROLE_CONFIG_DIR, file_name])
+			var role_name: String = data.get("name", "")
+			if not role_name.is_empty():
+				_role_defs[role_name] = data
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+
 func _get_role_def(role_name: String) -> Dictionary:
 	if _role_defs.has(role_name):
 		return _role_defs[role_name]
@@ -90,6 +117,21 @@ func clear_requests_for_role(role_name: String) -> void:
 	for r in _role_requests:
 		if r != role_name:
 			result.append(r)
+	_role_requests = result
+
+
+## Withdraws at most `count` pending requests for role_name, oldest first,
+## leaving any remainder untouched - unlike clear_requests_for_role, this
+## never over-withdraws still-needed requests. Holders are never touched;
+## only the anonymous request queue is affected (ADR 1, ADR 2).
+func withdraw_requests(role_name: String, count: int) -> void:
+	var result: Array = []
+	var remaining_to_withdraw := count
+	for r in _role_requests:
+		if r == role_name and remaining_to_withdraw > 0:
+			remaining_to_withdraw -= 1
+			continue
+		result.append(r)
 	_role_requests = result
 
 
@@ -200,6 +242,25 @@ func get_threshold(resource_type: String, key: String, default_val: int = 0) -> 
 	return thresh.get(key, default_val)
 
 
+## Read-only target/surplus query (ADR 1): answers questions about a role
+## from the target distribution cached at the last evaluation - never about,
+## or to, a specific agent. The agent side of ADR 2's eligibility check
+## calls this to decide whether its own current role is Surplus.
+func get_cached_target(role_name: String) -> int:
+	return _cached_targets.get(role_name, 0)
+
+
+func is_role_surplus(role_name: String) -> bool:
+	return get_role_count(role_name) > get_cached_target(role_name)
+
+
+## Called by the agent side (RoleAcquisition) once a taken request has been
+## applied as a role change - the OM never takes requests itself (ADR 1), so
+## it relies on this notification to know when to emit its own signal.
+func notify_request_fulfilled(agent_id: String, role_name: String) -> void:
+	role_request_fulfilled.emit(agent_id, role_name)
+
+
 func _evaluate_roles() -> void:
 	if _nest_ref == null:
 		return
@@ -213,16 +274,19 @@ func _evaluate_roles() -> void:
 	if total_agents == 0:
 		return
 
-	var target_counts := _compute_target_distribution(food_storage, wood_storage, total_agents)
+	_cached_targets = _compute_target_distribution(food_storage, wood_storage, total_agents)
 
-	for role_name in target_counts:
-		var target: int = target_counts[role_name]
-		var current := get_request_count(role_name)
-		if target > current:
-			for i in range(target - current):
+	for role_name in _cached_targets:
+		var target: int = _cached_targets[role_name]
+		var holders := get_role_count(role_name)
+		var pending := get_request_count(role_name)
+		var deficit: int = target - (holders + pending)
+
+		if deficit > 0:
+			for i in range(deficit):
 				post_request(role_name)
-		elif target < current:
-			clear_requests_for_role(role_name)
+		elif deficit < 0:
+			withdraw_requests(role_name, mini(-deficit, pending))
 
 
 func _compute_target_distribution(food: int, wood: int, total: int) -> Dictionary:

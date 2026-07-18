@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://utsofecpbpfx"]
 
 [ext_resource type="Script" uid="uid://cmi0msx5vjkia" path="res://simulation/simulation.gd" id="1"]
-[ext_resource type="PackedScene" path="res://agents/agent.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://organization/Nest.tscn" id="3_gmbkg"]
 [ext_resource type="Script" uid="uid://4wlj7k7xeod0" path="res://resources/resource_manager.gd" id="5"]
 
@@ -15,12 +14,6 @@ script = ExtResource("1")
 
 [node name="NavigationRegion" type="NavigationRegion2D" parent="." unique_id=1775211690]
 navigation_polygon = SubResource("NavigationPolygon_main")
-
-[node name="Agent" parent="NavigationRegion" unique_id=221590033 instance=ExtResource("3")]
-position = Vector2(620, 300)
-
-[node name="Agent2" parent="NavigationRegion" unique_id=1690950860 instance=ExtResource("3")]
-position = Vector2(530, 340)
 
 [node name="Nest" parent="." unique_id=1524362266 instance=ExtResource("3_gmbkg")]
 position = Vector2(576, 324)

@@ -77,7 +77,7 @@ func _test_target_distribution_balanced() -> void:
 	for role in target:
 		total_requests += target[role]
 	_assert(total_requests > 0, "Balanced distribution produces requests (total=%d)" % total_requests)
-	_assert(target.get("Guard", 0) >= 1, "Always produces at least one Guard")
+	_assert(target.get("Guard", 0) == 0, "Guard stays dormant (zero target) until Phase 6")
 
 
 func _test_om_evaluation_posts_requests() -> void:

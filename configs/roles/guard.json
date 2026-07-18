@@ -16,7 +16,7 @@
   },
   "distribution": {
     "rules": [
-      { "default": true, "percent": 0.1 }
+      { "default": true, "percent": 0 }
     ]
   },
   "color": "#f44747"

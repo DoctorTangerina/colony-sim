@@ -112,11 +112,11 @@ func _test_explorer_boosts_when_both_resources_abundant() -> void:
 
 
 func _test_guard_always_targets_ten_percent() -> void:
-	print("[Test] Guard's target is a flat 10% regardless of resource levels")
+	print("[Test] Guard's target is a flat 0% regardless of resource levels (dormant until Phase 6)")
 	var om = _make_om_with_role_defs()
 
 	var low_scenario = om._compute_target_distribution(5, 5, 10)
 	var abundant_scenario = om._compute_target_distribution(60, 60, 10)
 
-	_assert(low_scenario.get("Guard", 0) == 1, "Guard target is 10%% of 10 when resources are low (got %d)" % low_scenario.get("Guard", 0))
-	_assert(abundant_scenario.get("Guard", 0) == 1, "Guard target is 10%% of 10 when resources are abundant (got %d)" % abundant_scenario.get("Guard", 0))
+	_assert(low_scenario.get("Guard", 0) == 0, "Guard target is 0%% of 10 when resources are low (got %d)" % low_scenario.get("Guard", 0))
+	_assert(abundant_scenario.get("Guard", 0) == 0, "Guard target is 0%% of 10 when resources are abundant (got %d)" % abundant_scenario.get("Guard", 0))

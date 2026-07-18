@@ -96,19 +96,21 @@ func _test_simulation_wires_agent_died_to_om_handle_agent_death() -> void:
 
 	var sim = preload("res://simulation/Simulation.tscn").instantiate()
 	add_child(sim)
-	for i in range(5):
+	for i in range(15):
 		await get_tree().physics_frame
 
-	# Agent.setup() already registered both agents (with the OM) at spawn as
-	# part of the live sim wiring - update the target agent's role in place
-	# rather than re-registering under a new id (which would leave the spawn
-	# registration as an orphaned entry), and unregister its sibling so the
-	# death assertions below aren't muddied by an unrelated live agent.
-	var agent = sim.get_node("NavigationRegion/Agent")
-	var sibling = sim.get_node("NavigationRegion/Agent2")
-	var death_agent_id: String = agent.agent_id
+	# Agent.setup() already registered every spawned agent (with the OM) at
+	# spawn as part of the live sim wiring - update the target agent's role
+	# in place rather than re-registering under a new id (which would leave
+	# the spawn registration as an orphaned entry), and unregister the rest
+	# so the death assertions below aren't muddied by other live agents.
+	var agent_ids: Array = om.get_registered_agent_ids()
+	var death_agent_id: String = agent_ids[0]
+	var agent = om.get_agent_node(death_agent_id)
 	om.update_agent_role(death_agent_id, "Guard")
-	om.unregister_agent(sibling.agent_id)
+	for other_id in agent_ids:
+		if other_id != death_agent_id:
+			om.unregister_agent(other_id)
 
 	var death_count_before: int = om.get_death_count()
 

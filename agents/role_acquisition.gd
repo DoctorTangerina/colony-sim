@@ -46,7 +46,7 @@ func set_role(role_name: String) -> void:
 		_cooldown_ends_at_msec = Time.get_ticks_msec() + int(_role_cooldown_duration * 1000.0)
 		role_changed.emit(_agent_id, old_role, role_name)
 
-		if role_name != "" and role_name != "Unassigned" and _om_ref:
+		if role_name != "" and _om_ref:
 			_om_ref.update_agent_role(_agent_id, role_name, "role_request_fulfilled")
 
 
@@ -54,12 +54,19 @@ func get_current_role() -> String:
 	return current_role
 
 
+## Eligibility (ADR 2): Unassigned agents may take any request; an assigned
+## agent may take a request only while its current role is Surplus - checked
+## via the OM's read-only query, never by the OM selecting or demoting an
+## agent itself. All other gates (cooldown, nest zone, first-eligible-wins,
+## skip-own-role) are unchanged.
 func check_and_acquire_role() -> void:
 	if get_cooldown() > 0.0:
 		return
 	if _nest_zone and not _nest_zone.is_in_nest_zone():
 		return
 	if _om_ref == null:
+		return
+	if current_role != "Unassigned" and not _om_ref.is_role_surplus(current_role):
 		return
 
 	var requests = _om_ref.get_all_requests()
@@ -68,4 +75,5 @@ func check_and_acquire_role() -> void:
 			continue
 		if _om_ref.take_request(req_role):
 			set_role(req_role)
+			_om_ref.notify_request_fulfilled(_agent_id, req_role)
 			return

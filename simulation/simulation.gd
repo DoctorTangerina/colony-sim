@@ -1,5 +1,8 @@
 extends Node2D
 
+const AGENT_SCENE: PackedScene = preload("res://agents/agent.tscn")
+const SPAWN_SCATTER_RADIUS: float = 40.0
+
 var navigation_map: RID
 
 func _ready() -> void:
@@ -8,7 +11,7 @@ func _ready() -> void:
 	var nest = $Nest
 
 	_connect_resources(rm)
-	_connect_agents(nest, rm)
+	await _spawn_agents(nest, rm)
 	_connect_om(nest)
 
 
@@ -18,18 +21,38 @@ func _connect_resources(rm: Node) -> void:
 			child.depleted.connect(rm._on_resource_depleted)
 
 
-func _connect_agents(nest: Node2D, rm: Node) -> void:
-	_find_and_setup_agents(self, nest, rm)
+## Spawns `agentCount` agents near the Nest, all starting Unassigned. Waits
+## for the navigation map to become queryable first - the same nav-sync race
+## resource_manager.gd already guards against when spawning onto the navmesh.
+func _spawn_agents(nest: Node2D, rm: Node) -> void:
+	var data: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
+	var agent_count: int = data.get("agentCount", 8)
+	if agent_count <= 0:
+		return
+
+	await _wait_for_navigation_map_ready(nest.global_position)
+
+	var spawn_parent: Node = $NavigationRegion
+	for i in range(agent_count):
+		var agent = AGENT_SCENE.instantiate()
+		spawn_parent.add_child(agent)
+		agent.global_position = nest.global_position + Vector2(
+			randf_range(-SPAWN_SCATTER_RADIUS, SPAWN_SCATTER_RADIUS),
+			randf_range(-SPAWN_SCATTER_RADIUS, SPAWN_SCATTER_RADIUS)
+		)
+		agent.setup(nest, rm)
+		if agent.has_signal("agent_died"):
+			agent.agent_died.connect(_on_agent_died)
 
 
-func _find_and_setup_agents(node: Node, nest: Node2D, rm: Node) -> void:
-	for child in node.get_children():
-		if child is CharacterBody2D and child.has_method("setup"):
-			child.setup(nest, rm)
-			if child.has_signal("agent_died"):
-				child.agent_died.connect(_on_agent_died)
-		if child.get_child_count() > 0:
-			_find_and_setup_agents(child, nest, rm)
+func _wait_for_navigation_map_ready(probe: Vector2) -> void:
+	for _attempt in range(100):
+		var changed_map: RID = await NavigationServer2D.map_changed
+		if changed_map != navigation_map:
+			continue
+		if NavigationServer2D.map_get_closest_point(navigation_map, probe) != Vector2.ZERO:
+			return
+	push_error("simulation: navigation map never became queryable; agents may spawn at (0,0)")
 
 
 func _connect_om(nest: Node2D) -> void:

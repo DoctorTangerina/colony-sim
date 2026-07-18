@@ -183,7 +183,7 @@ func _test_main_scene_boots_with_debugger_tracking_live_agents() -> void:
 	var main := main_scene.instantiate()
 	add_child(main)
 
-	for i in range(3):
+	for i in range(15):
 		await get_tree().physics_frame
 
 	var debugger: Control = main.get_node("DebuggerUI")
