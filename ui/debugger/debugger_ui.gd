@@ -29,6 +29,8 @@ var _selected_agent_id: String = ""
 
 var _org_panel: DebuggerOrgPanel
 
+var _log_panel: DebuggerLogPanel
+
 @onready var _om: Node = get_node("/root/OrganizationManager")
 
 
@@ -40,6 +42,7 @@ func _ready() -> void:
 	_build_tree(config)
 	_build_inspector(config)
 	_build_organization_tab(config)
+	_build_log_tab(config)
 	_update_interval = 1.0 / maxf(config.get("update_hz", 5.0), 0.001)
 
 	_om.agent_registered.connect(_on_agent_registered)
@@ -187,6 +190,23 @@ func _build_organization_tab(config: Dictionary) -> void:
 	_org_panel.setup(sections, config.get("colors", {}))
 
 
+## The Log tab has no fold wrapper (the tab itself is the section boundary,
+## per the org-overlay spec) and no config gating - unlike the Organization
+## tab's sections, there's nothing to opt in or out of here.
+func _build_log_tab(config: Dictionary) -> void:
+	var log_tab := Control.new()
+	log_tab.name = "Log"
+	log_tab.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tabs.add_child(log_tab)
+	_tabs.set_tab_title(_tabs.get_tab_count() - 1, "Log")
+
+	_log_panel = DebuggerLogPanel.new()
+	_log_panel.name = "LogPanel"
+	_log_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	log_tab.add_child(_log_panel)
+	_log_panel.setup(config.get("colors", {}))
+
+
 func _process(delta: float) -> void:
 	_update_timer += delta
 	if _update_timer < _update_interval:
@@ -194,7 +214,7 @@ func _process(delta: float) -> void:
 	_update_timer = 0.0
 	_refresh_all_rows()
 	_refresh_inspector()
-	_refresh_org_panel()
+	_refresh_organization_state()
 
 
 func _refresh_all_rows() -> void:
@@ -215,8 +235,12 @@ func _refresh_inspector() -> void:
 	_inspector.show_agent_info(info, _role_colors.get(info.get("role", ""), _default_role_color))
 
 
-func _refresh_org_panel() -> void:
-	_org_panel.show_org_info(_om.get_debug_info())
+## Ticket 2's single OM snapshot backs both the Organization tab and the Log
+## tab, so a refresh tick never queries the OM twice for the same data.
+func _refresh_organization_state() -> void:
+	var info: Dictionary = _om.get_debug_info()
+	_org_panel.show_org_info(info)
+	_log_panel.show_log_info(info.get("role_change_log", []))
 
 
 func _on_tree_item_selected() -> void:
