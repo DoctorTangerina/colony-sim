@@ -2,6 +2,7 @@ extends IAgentActions
 
 signal item_changed(new_item: String)
 signal action_completed
+signal action_verified(action_name: String)
 signal role_changed(agent_id: String, old_role: String, new_role: String)
 signal agent_died(agent_id: String, last_role: String)
 
@@ -385,6 +386,10 @@ func record_failed_report(resource_type: String, position: Vector2) -> void:
 		return
 	failed_resource_type = resource_type
 	failed_resource_pos = position
+
+
+func notify_action_verified(action_name: String) -> void:
+	action_verified.emit(action_name)
 
 
 func clear_failed_report() -> void:

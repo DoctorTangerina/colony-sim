@@ -145,6 +145,13 @@ func on_action_completed() -> void:
 		_handle_action_failure(completed_action)
 		return
 
+	# ADR 12: Action Verified (CONTEXT.md) - purely additive observability,
+	# announced only after the effect-satisfaction check above already
+	# passed. Generic on purpose: this doesn't know or care what a listener
+	# (e.g. MetricsLogger) considers "productive."
+	if not completed_action.is_empty():
+		_agent.notify_action_verified(completed_action)
+
 	_action_index += 1
 
 	# ADR 7: a plan that finishes cleanly replans immediately rather than

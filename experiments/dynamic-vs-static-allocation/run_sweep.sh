@@ -6,6 +6,15 @@
 # (simulation/experiment_cli.gd) that Tickets 01-03 already made every run
 # accept.
 #
+# ADR 12 amendment (Ticket 07): each run's stderr is captured to a per-run
+# <tag>.stderr.log under results/, rather than discarded - this is how the
+# oscillation-backstop qualitative case gets detected (analyze.py greps for
+# GoapCycle.gd's existing push_error message; a run that never trips it
+# produces an empty log, which is itself the expected, citable result).
+# Failure detection still keys off Godot's exit code only, never stderr
+# content, so a run that legitimately logs nothing to stderr but exits
+# nonzero is still caught.
+#
 # Usage: ./run_sweep.sh
 # Env overrides: GODOT, FIXED_FPS, DURATION, SEEDS, POPULATIONS,
 #                RESPAWN_TIMES, MODES (space-separated lists where relevant)
@@ -46,7 +55,7 @@ for pop in $POPULATIONS; do
 					--log-metrics --duration="$DURATION" \
 					--agent-count="$pop" --respawn-time="$respawn" \
 					--distribution-mode="$mode" --seed="$run_seed" \
-					>/dev/null 2>&1; then
+					>/dev/null 2>"$RESULTS_DIR/${tag}.stderr.log"; then
 					echo "  FAILED - see $FAIL_LOG"
 					echo "$tag" >>"$FAIL_LOG"
 					failed=$((failed + 1))

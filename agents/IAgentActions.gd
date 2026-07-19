@@ -110,3 +110,12 @@ func pick_explore_target() -> Vector2:
 ## discovery carry-slot until ReportDepletion clears it at the Nest.
 func record_failed_report(_resource_type: String, _position: Vector2) -> void:
 	pass
+
+
+## ADR 12: called by GoapCycle once verify-by-effect confirms a completed
+## action's declared effect genuinely holds (Action Verified, CONTEXT.md) -
+## generic on purpose, agent.gd stays ignorant of what any listener does with
+## the name. Kept behind this seam rather than agent.gd emitting its signal
+## directly from GoapCycle, matching every other GoapCycle->agent notification.
+func notify_action_verified(_action_name: String) -> void:
+	pass
