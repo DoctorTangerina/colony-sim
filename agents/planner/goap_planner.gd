@@ -189,8 +189,14 @@ func _load_configs() -> void:
 	for item in actions:
 		_actions.append(item as Dictionary)
 
-	for goto_action in GotoGrounding.build_actions(_load_resource_kinds(), WorldState.new().get_field_keys()):
+	var resource_kinds := _load_resource_kinds()
+	var known_fields := WorldState.new().get_field_keys()
+
+	for goto_action in GotoGrounding.build_actions(resource_kinds, known_fields):
 		_actions.append(goto_action)
+
+	for get_resource_action in GetResourceGrounding.build_actions(resource_kinds, known_fields):
+		_actions.append(get_resource_action)
 
 	var goals: Array = ConfigLoader.load_array("res://configs/goals/goals.json")
 	_goals.clear()

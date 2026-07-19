@@ -175,6 +175,9 @@ func _build_world_state() -> WorldState:
 	var at_food_position := false
 	var at_wood_position := false
 
+	var food_stored: bool = nest_ref.get_storage("Food") > 0 if nest_ref else false
+	var wood_stored: bool = nest_ref.get_storage("Wood") > 0 if nest_ref else false
+
 	if resource_manager_ref:
 		var food_node = resource_manager_ref.get_nearest_resource(global_position, "Food")
 		if food_node and is_instance_valid(food_node):
@@ -203,7 +206,7 @@ func _build_world_state() -> WorldState:
 
 	return WorldState.build(held_item, _energy_critical, hunger, at_nest, food_visible, wood_visible,
 		_near_unreported_resource, has_known_food, has_known_wood, has_unreported_discovery,
-		at_food_position, at_wood_position, has_failed_report)
+		at_food_position, at_wood_position, has_failed_report, food_stored, wood_stored)
 
 
 ## Scans for a nearby resource the Blackboard doesn't know about yet and
@@ -295,6 +298,21 @@ func attempt_pickup(resource_type: String) -> void:
 		return
 	var extracted: int = node.extract(1)
 	if extracted > 0:
+		pick_up_item(resource_type)
+
+
+## Mirrors attempt_pickup's shape (Interaction Range via at_nest, single-slot
+## hands) but sourced from the Nest's own storage (Nest.withdraw) rather than
+## a live field resource node - a Gatherer's second, non-foraging route to
+## Food/Wood (SPEC.md Ticket 03). An honest no-op against empty Nest stock:
+## no held-item change, caught by the ordinary Action Failure path.
+func attempt_withdraw(resource_type: String) -> void:
+	if held_item != "None":
+		return
+	if not nest_ref or not nest_ref.has_method("withdraw"):
+		return
+	var withdrawn: int = nest_ref.withdraw(resource_type, 1)
+	if withdrawn > 0:
 		pick_up_item(resource_type)
 
 

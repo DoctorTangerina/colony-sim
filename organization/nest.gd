@@ -36,6 +36,25 @@ func deposit(resource_type: String, amount: int) -> void:
 		_check_thresholds("Wood", wood_storage)
 
 
+## Honest withdrawal (ADR 6-adjacent): returns the amount actually taken, 0 if
+## stock is insufficient - never overdraws storage. Mirrors deposit()'s shape
+## so GetResource[Kind] can be verified the same way every other action's
+## declared effect is (agent.gd's attempt_withdraw only reflects a held-item
+## change when this returns > 0).
+func withdraw(resource_type: String, amount: int) -> int:
+	if resource_type == "Food":
+		var actual: int = mini(amount, food_storage)
+		food_storage -= actual
+		_check_thresholds("Food", food_storage)
+		return actual
+	elif resource_type == "Wood":
+		var actual: int = mini(amount, wood_storage)
+		wood_storage -= actual
+		_check_thresholds("Wood", wood_storage)
+		return actual
+	return 0
+
+
 func get_storage_summary() -> Dictionary:
 	return {"Food": food_storage, "Wood": wood_storage}
 

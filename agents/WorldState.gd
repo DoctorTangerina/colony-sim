@@ -26,6 +26,8 @@ extends Resource
 ## - has_failed_report (bool): agent is carrying a verified Action Failure (Pickup found nothing at a known position) it has not yet reported to the Nest - independent of has_unreported_discovery (ADR 6).
 ## - is_idle (bool): always false, like enemy_near - Idle's declared effect (Ticket 6) targets a fact this schema never senses true, which is what keeps the Idle goal perpetually achievable (never "already satisfied") whenever nothing else is, mirroring Explore's own perpetual shape.
 ## - at_explore_position (bool): always false, like is_idle/enemy_near - RandomExplore's honest effect (Ticket 7/ADR 9) is plain arrival at its own procedurally-chosen target, which by construction can never already be sensed true (the target doesn't exist until the action picks it), keeping Explore perpetually achievable rather than a one-shot goal. Distinct from the Explored Trail (organization/explored_trail.gd), which is never Planner-visible at all.
+## - food_stored (bool): the Nest's Food storage counter > 0 - gates GetFood's relevance, mirroring known_food_position's role for CollectFood.
+## - wood_stored (bool): the Nest's Wood storage counter > 0 - gates GetWood's relevance, mirroring known_wood_position's role for CollectWood.
 var at_nest: bool = false
 var has_food: bool = false
 var has_wood: bool = false
@@ -45,6 +47,8 @@ var at_wood_position: bool = false
 var has_failed_report: bool = false
 var is_idle: bool = false
 var at_explore_position: bool = false
+var food_stored: bool = false
+var wood_stored: bool = false
 
 
 static func build(
@@ -60,7 +64,9 @@ static func build(
 	has_unreported_discovery: bool = false,
 	at_food_position: bool = false,
 	at_wood_position: bool = false,
-	has_failed_report: bool = false
+	has_failed_report: bool = false,
+	food_stored: bool = false,
+	wood_stored: bool = false
 ) -> WorldState:
 	var state := WorldState.new()
 	state.at_nest = at_nest
@@ -82,6 +88,8 @@ static func build(
 	state.has_failed_report = has_failed_report
 	state.is_idle = false
 	state.at_explore_position = false
+	state.food_stored = food_stored
+	state.wood_stored = wood_stored
 	return state
 
 
@@ -137,7 +145,8 @@ func get_field_keys() -> Array:
 	return ["at_nest", "has_food", "has_wood", "has_item", "energy_critical", "high_hunger",
 		"food_visible", "wood_visible", "resource_visible", "enemy_near", "near_unreported_resource",
 		"known_food_position", "known_wood_position", "has_unreported_discovery",
-		"at_food_position", "at_wood_position", "has_failed_report", "is_idle", "at_explore_position"]
+		"at_food_position", "at_wood_position", "has_failed_report", "is_idle", "at_explore_position",
+		"food_stored", "wood_stored"]
 
 
 func get_field(key: String) -> Variant:
@@ -161,6 +170,8 @@ func get_field(key: String) -> Variant:
 		"has_failed_report": return has_failed_report
 		"is_idle": return is_idle
 		"at_explore_position": return at_explore_position
+		"food_stored": return food_stored
+		"wood_stored": return wood_stored
 		_: return null
 
 
@@ -185,4 +196,6 @@ func set_field(key: String, value: Variant) -> void:
 		"has_failed_report": has_failed_report = value
 		"is_idle": is_idle = value
 		"at_explore_position": at_explore_position = value
+		"food_stored": food_stored = value
+		"wood_stored": wood_stored = value
 		_: _fail_unrecognized_key(key)

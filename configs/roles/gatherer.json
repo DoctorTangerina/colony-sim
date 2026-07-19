@@ -4,13 +4,17 @@
     "CollectFood",
     "CollectWood",
     "DepositResource",
-    "ReportDepletion"
+    "ReportDepletion",
+    "GetFood",
+    "GetWood"
   ],
   "allowedActions": [
     "PickupFood",
     "PickupWood",
     "DepositResource",
-    "ReportDepletion"
+    "ReportDepletion",
+    "GetResource[Food]",
+    "GetResource[Wood]"
   ],
   "priorityModifiers": {
     "CollectFood": 2.0,

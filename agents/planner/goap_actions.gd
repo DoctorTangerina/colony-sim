@@ -16,3 +16,11 @@ const IDLE := "Idle"
 ## instances (see GotoGrounding), and GoapActionExecutor dispatches on the
 ## "GoTo[" prefix rather than this exact name.
 const GOTO := "GoTo"
+
+## Base name for the grounded Nest-withdrawal action (SPEC.md
+## .scratch/survival-loop Ticket 03). Mirrors GOTO's shape: grounded into
+## "GetResource[Kind]" instances (see GetResourceGrounding), dispatched on
+## the "GetResource[" prefix. Unlike GOTO, not a Universal Capability -
+## Gatherer's role config lists the concrete grounded instance names
+## directly.
+const GET_RESOURCE := "GetResource"

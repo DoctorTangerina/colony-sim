@@ -39,6 +39,13 @@ func attempt_pickup(_resource_type: String) -> void:
 	pass
 
 
+## Withdraws resource_type from the Nest's own storage into hands, mirroring
+## attempt_pickup's shape (single-slot, no-op if hands already full) but
+## sourced from Nest.withdraw() instead of a live field resource node.
+func attempt_withdraw(_resource_type: String) -> void:
+	pass
+
+
 func drop_item() -> void:
 	pass
 

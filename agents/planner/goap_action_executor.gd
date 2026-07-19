@@ -12,6 +12,9 @@ static func execute_action(action_name: String, agent: IAgentActions) -> void:
 	if action_name.begins_with(GoapActions.GOTO + "["):
 		_goto(action_name, agent)
 		return
+	if action_name.begins_with(GoapActions.GET_RESOURCE + "["):
+		_get_resource(action_name, agent)
+		return
 	_ensure_registry()
 	var handler: Callable = _registry.get(action_name, _default_handler)
 	handler.call(agent)
@@ -91,6 +94,17 @@ static func _goto(action_name: String, agent: IAgentActions) -> void:
 ## every other GoTo-shaped action.
 static func _explore(agent: IAgentActions) -> void:
 	agent.move_to(agent.pick_explore_target())
+
+
+## Dispatches a grounded "GetResource[Kind]" plan step (GetResourceGrounding;
+## SPEC.md Ticket 03), mirroring _goto's shape. Withdrawal against empty Nest
+## stock is an honest no-op (agent.attempt_withdraw), surfaced through the
+## ordinary Action Failure / verify-by-effect path rather than a bespoke
+## success/failure check here.
+static func _get_resource(action_name: String, agent: IAgentActions) -> void:
+	var kind := action_name.trim_prefix(GoapActions.GET_RESOURCE + "[").trim_suffix("]")
+	agent.attempt_withdraw(kind)
+	agent.complete_action()
 
 
 ## Left untyped/untouched: writes directly to the Blackboard node rather than

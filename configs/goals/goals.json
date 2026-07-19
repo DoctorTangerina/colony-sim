@@ -60,6 +60,18 @@
 	"effects": { "energy_critical": false }
   },
   {
+	"name": "GetFood",
+	"desirability": 5.0,
+	"preconditions": { "food_stored": true, "high_hunger": true },
+	"effects": { "has_food": true }
+  },
+  {
+	"name": "GetWood",
+	"desirability": 5.0,
+	"preconditions": { "wood_stored": true, "energy_critical": false },
+	"effects": { "has_wood": true }
+  },
+  {
 	"name": "Idle",
 	"desirability": 0.1,
 	"preconditions": {},
