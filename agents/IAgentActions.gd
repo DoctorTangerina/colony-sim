@@ -47,6 +47,10 @@ func reduce_hunger(_amount: float) -> void:
 	pass
 
 
+func reset_hunger() -> void:
+	pass
+
+
 func restore_energy(_amount: float) -> void:
 	pass
 

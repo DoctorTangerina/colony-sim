@@ -13,5 +13,7 @@
   "discoveryRadius": 50.0,
   "interactionRadius": 50.0,
   "planningInterval": 2.0,
-  "switchMargin": 2.0
+  "switchMargin": 2.0,
+  "hungerIncreasePerSecond": 1.0,
+  "deathHunger": 100.0
 }

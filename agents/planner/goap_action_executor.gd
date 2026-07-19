@@ -36,7 +36,7 @@ static func _default_handler(agent: IAgentActions) -> void:
 
 
 static func _eat(agent: IAgentActions) -> void:
-	agent.reduce_hunger(40.0)
+	agent.reset_hunger()
 	agent.complete_action()
 
 

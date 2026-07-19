@@ -29,6 +29,8 @@ var _switch_margin: float = 0.0
 var _agent_speed: float = 200.0
 var _discovery_radius: float = 50.0
 var _interaction_radius: float = 50.0
+var _hunger_increase_per_second: float = 1.0
+var _death_hunger: float = 100.0
 var discovered_resource_type: String = ""
 var discovered_resource_pos: Vector2 = Vector2.ZERO
 var failed_resource_type: String = ""
@@ -60,6 +62,8 @@ func _load_sim_config() -> void:
 	_switch_margin = data.get("switchMargin", 2.0)
 	_discovery_radius = data.get("discoveryRadius", 50.0)
 	_interaction_radius = data.get("interactionRadius", 50.0)
+	_hunger_increase_per_second = data.get("hungerIncreasePerSecond", 1.0)
+	_death_hunger = data.get("deathHunger", 100.0)
 	if not data.has("mapMinX") or not data.has("mapMinY") or not data.has("mapMaxX") or not data.has("mapMaxY"):
 		push_error("agent: simulation.json missing map bounds (mapMinX, mapMinY, mapMaxX, mapMaxY)")
 		return
@@ -91,6 +95,10 @@ func setup(nest: Node2D, resource_manager: Node) -> void:
 
 
 func _process(delta: float) -> void:
+	if _is_dead:
+		return
+
+	_update_hunger(delta)
 	_check_death()
 	if _is_dead:
 		return
@@ -101,9 +109,17 @@ func _process(delta: float) -> void:
 	_goap_cycle.process(delta)
 
 
-## Guards against re-emitting agent_died once energy has bottomed out.
+## Standing pressure (SPEC.md Ticket 01): rises every frame regardless of the
+## agent's current action, goal, or Rest state - uncoupled from GOAP entirely.
+func _update_hunger(delta: float) -> void:
+	hunger = minf(hunger + _hunger_increase_per_second * delta, 100.0)
+
+
+## Guards against re-emitting agent_died once hunger has topped out. Energy
+## no longer factors into death (SPEC.md Ticket 01) - hitting 0 energy only
+## ever forces Rest (Ticket 02), never kills.
 func _check_death() -> void:
-	if _is_dead or energy > 0.0:
+	if _is_dead or hunger < _death_hunger:
 		return
 	_is_dead = true
 	_navigator.stop()
@@ -264,6 +280,10 @@ func drop_item() -> void:
 
 func reduce_hunger(amount: float) -> void:
 	hunger = maxf(hunger - amount, 0.0)
+
+
+func reset_hunger() -> void:
+	hunger = 0.0
 
 
 func restore_energy(amount: float) -> void:
