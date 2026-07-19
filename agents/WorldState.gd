@@ -24,6 +24,7 @@ extends Resource
 ## - at_food_position (bool): a Food resource node is within Interaction Range (arm's-length) of the agent right now - distinct from food_visible's Discovery Radius (seeing != reaching).
 ## - at_wood_position (bool): a Wood resource node is within Interaction Range of the agent right now - distinct from wood_visible's Discovery Radius.
 ## - has_failed_report (bool): agent is carrying a verified Action Failure (Pickup found nothing at a known position) it has not yet reported to the Nest - independent of has_unreported_discovery (ADR 6).
+## - is_idle (bool): always false, like enemy_near - Idle's declared effect (Ticket 6) targets a fact this schema never senses true, which is what keeps the Idle goal perpetually achievable (never "already satisfied") whenever nothing else is, mirroring Explore's own perpetual shape.
 var at_nest: bool = false
 var has_food: bool = false
 var has_wood: bool = false
@@ -41,6 +42,7 @@ var has_unreported_discovery: bool = false
 var at_food_position: bool = false
 var at_wood_position: bool = false
 var has_failed_report: bool = false
+var is_idle: bool = false
 
 
 static func build(
@@ -76,6 +78,7 @@ static func build(
 	state.at_food_position = at_food_position
 	state.at_wood_position = at_wood_position
 	state.has_failed_report = has_failed_report
+	state.is_idle = false
 	return state
 
 
@@ -131,7 +134,7 @@ func get_field_keys() -> Array:
 	return ["at_nest", "has_food", "has_wood", "has_item", "low_energy", "high_hunger",
 		"food_visible", "wood_visible", "resource_visible", "enemy_near", "near_unreported_resource",
 		"known_food_position", "known_wood_position", "has_unreported_discovery",
-		"at_food_position", "at_wood_position", "has_failed_report"]
+		"at_food_position", "at_wood_position", "has_failed_report", "is_idle"]
 
 
 func get_field(key: String) -> Variant:
@@ -153,6 +156,7 @@ func get_field(key: String) -> Variant:
 		"at_food_position": return at_food_position
 		"at_wood_position": return at_wood_position
 		"has_failed_report": return has_failed_report
+		"is_idle": return is_idle
 		_: return null
 
 
@@ -175,4 +179,5 @@ func set_field(key: String, value: Variant) -> void:
 		"at_food_position": at_food_position = value
 		"at_wood_position": at_wood_position = value
 		"has_failed_report": has_failed_report = value
+		"is_idle": is_idle = value
 		_: _fail_unrecognized_key(key)

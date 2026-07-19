@@ -28,6 +28,7 @@ static func _ensure_registry() -> void:
 	_registry[GoapActions.RANDOM_EXPLORE] = _explore
 	_registry[GoapActions.REPORT_RESOURCE] = _report_resource
 	_registry[GoapActions.REPORT_DEPLETION] = _report_depletion
+	_registry[GoapActions.IDLE] = _idle
 
 
 static func _default_handler(agent: IAgentActions) -> void:
@@ -41,6 +42,14 @@ static func _eat(agent: IAgentActions) -> void:
 
 static func _rest(agent: IAgentActions) -> void:
 	agent.restore_energy(40.0)
+	agent.complete_action()
+
+
+## Passive fallback recovery (CONTEXT.md: Idle) - a smaller restore than
+## Rest's instant 40.0, matching the old hardcoded Unassigned recovery this
+## generalizes (Ticket 6). Never moves the agent.
+static func _idle(agent: IAgentActions) -> void:
+	agent.restore_energy(10.0)
 	agent.complete_action()
 
 

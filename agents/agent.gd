@@ -74,7 +74,7 @@ func _setup_modules() -> void:
 
 	_role_acquisition.role_changed.connect(_on_role_changed)
 
-	_goap_cycle.setup(self, _planner, _goal_selector, _role_component, _role_acquisition, _navigator, _build_world_state, _planning_interval)
+	_goap_cycle.setup(self, _planner, _goal_selector, _role_acquisition, _build_world_state, _planning_interval)
 	action_completed.connect(_goap_cycle.on_action_completed)
 
 

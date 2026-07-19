@@ -58,5 +58,11 @@
 	"desirability": 8.0,
 	"preconditions": {},
 	"effects": { "low_energy": false }
+  },
+  {
+	"name": "Idle",
+	"desirability": 0.1,
+	"preconditions": {},
+	"effects": { "is_idle": true }
   }
 ]

@@ -7,19 +7,13 @@ extends Node
 ## IAgentActions seam) and is supplied here as a Callable rather than widening
 ## that interface for a single caller.
 
-## Passive idle recovery for Unassigned agents, distinct from the Rest
-## action's instant +40.0 restore.
-const ENERGY_RECOVERY_RATE: float = 5.0
-
 var current_goal: String = ""
 var current_plan: Array = []
 
 var _agent: IAgentActions = null
 var _planner: Node = null
 var _goal_selector: Node = null
-var _role_component: Node = null
 var _role_acquisition: Node = null
-var _navigator: Node = null
 var _build_world_state: Callable
 var _planning_interval: float = 2.0
 var _planning_timer: float = 0.0
@@ -31,18 +25,14 @@ func setup(
 	agent: IAgentActions,
 	planner: Node,
 	goal_selector: Node,
-	role_component: Node,
 	role_acquisition: Node,
-	navigator: Node,
 	build_world_state: Callable,
 	planning_interval: float
 ) -> void:
 	_agent = agent
 	_planner = planner
 	_goal_selector = goal_selector
-	_role_component = role_component
 	_role_acquisition = role_acquisition
-	_navigator = navigator
 	_build_world_state = build_world_state
 	_planning_interval = planning_interval
 
@@ -59,13 +49,6 @@ func run_planning_cycle() -> void:
 		return
 
 	_role_acquisition.check_and_acquire_role()
-
-	if _role_component.get_role_name() == "Unassigned":
-		_navigator.stop()
-		_agent.restore_energy(_planning_interval * ENERGY_RECOVERY_RATE)
-		current_goal = ""
-		current_plan = []
-		return
 
 	var world_state: WorldState = _build_world_state.call()
 	var goal: Dictionary = _goal_selector.select_goal(world_state)

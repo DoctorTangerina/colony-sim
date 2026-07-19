@@ -46,5 +46,11 @@
     "cost": 1.0,
     "preconditions": { "has_item": true, "at_nest": true },
     "effects": { "has_food": false, "has_wood": false, "has_item": false }
+  },
+  {
+    "name": "Idle",
+    "cost": 0.1,
+    "preconditions": {},
+    "effects": { "is_idle": true }
   }
 ]

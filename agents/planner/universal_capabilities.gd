@@ -9,10 +9,13 @@ extends Node
 ## Ticket 5 - passive discovery scanning (agent.gd's _scan_for_discovery)
 ## already runs role-blind for every agent, so any non-Explorer role that
 ## incidentally captures a discovery into its carry-slot must also be able
-## to clear it, or that slot jams permanently. Idle is registered by a
-## later ticket.
-const GOALS: Array = ["ReportDiscovery"]
-const ACTIONS: Array = [GoapActions.GOTO, GoapActions.REPORT_RESOURCE]
+## to clear it, or that slot jams permanently. Idle is registered as of
+## Ticket 6 - the always-relevant, lowest-priority fallback every role
+## (assigned or Unassigned) falls into once nothing else is relevant;
+## role-gating it would reproduce the exact "stands frozen forever" gap it
+## exists to close.
+const GOALS: Array = ["ReportDiscovery", "Idle"]
+const ACTIONS: Array = [GoapActions.GOTO, GoapActions.REPORT_RESOURCE, GoapActions.IDLE]
 
 
 static func is_universal_goal(goal_name: String) -> bool:

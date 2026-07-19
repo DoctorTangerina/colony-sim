@@ -9,6 +9,7 @@ const DEPOSIT_RESOURCE := "DepositResource"
 const RANDOM_EXPLORE := "RandomExplore"
 const REPORT_RESOURCE := "ReportResource"
 const REPORT_DEPLETION := "ReportDepletion"
+const IDLE := "Idle"
 
 ## Base name for the grounded travel action (CONTEXT.md: GoTo). Never appears
 ## alone in a plan or a role config - the Planner grounds it into "GoTo[Kind]"
