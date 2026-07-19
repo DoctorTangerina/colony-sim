@@ -27,7 +27,7 @@
 	"name": "DepositResource",
 	"desirability": 6.0,
 	"preconditions": { "has_item": true },
-	"effects": { "has_food": false, "has_wood": false }
+	"effects": { "has_item": false }
   },
   {
 	"name": "DefendNest",
