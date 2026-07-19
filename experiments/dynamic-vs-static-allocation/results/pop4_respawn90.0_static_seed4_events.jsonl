@@ -1,0 +1,10 @@
+{"agent_id":"43352327838","event":"role_changed","new_role":"Explorer","old_role":"Unassigned","timestamp":2.00416666666666}
+{"agent_id":"43822089928","event":"role_changed","new_role":"Explorer","old_role":"Unassigned","timestamp":2.00416666666666}
+{"agent_id":"44291851993","event":"role_changed","new_role":"Gatherer","old_role":"Unassigned","timestamp":2.00416666666666}
+{"agent_id":"44761614058","event":"role_changed","new_role":"Gatherer","old_role":"Unassigned","timestamp":2.00416666666666}
+{"event":"discovery","resource_type":"Food","timestamp":90.8666666666662}
+{"action_name":"ReportResource","agent_id":"43822089928","event":"action_verified","timestamp":90.8666666666662}
+{"agent_id":"43352327838","event":"death","food_storage":0,"last_role":"Explorer","timestamp":99.9999999999912,"wood_storage":0}
+{"agent_id":"43822089928","event":"death","food_storage":0,"last_role":"Explorer","timestamp":99.9999999999912,"wood_storage":0}
+{"agent_id":"44291851993","event":"death","food_storage":0,"last_role":"Gatherer","timestamp":99.9999999999912,"wood_storage":0}
+{"agent_id":"44761614058","event":"death","food_storage":0,"last_role":"Gatherer","timestamp":99.9999999999912,"wood_storage":0}
