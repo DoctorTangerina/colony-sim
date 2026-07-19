@@ -11,5 +11,7 @@
   "mapMaxX": 1120,
   "mapMaxY": 616,
   "discoveryRadius": 50.0,
-  "interactionRadius": 50.0
+  "interactionRadius": 50.0,
+  "planningInterval": 2.0,
+  "switchMargin": 2.0
 }

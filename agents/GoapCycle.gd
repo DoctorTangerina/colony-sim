@@ -16,6 +16,7 @@ var _goal_selector: Node = null
 var _role_acquisition: Node = null
 var _build_world_state: Callable
 var _planning_interval: float = 2.0
+var _switch_margin: float = 0.0
 var _planning_timer: float = 0.0
 var _action_index: int = 0
 var _action_in_progress: bool = false
@@ -27,7 +28,8 @@ func setup(
 	goal_selector: Node,
 	role_acquisition: Node,
 	build_world_state: Callable,
-	planning_interval: float
+	planning_interval: float,
+	switch_margin: float = 0.0
 ) -> void:
 	_agent = agent
 	_planner = planner
@@ -35,6 +37,7 @@ func setup(
 	_role_acquisition = role_acquisition
 	_build_world_state = build_world_state
 	_planning_interval = planning_interval
+	_switch_margin = switch_margin
 
 
 func process(delta: float) -> void:
@@ -44,14 +47,22 @@ func process(delta: float) -> void:
 		run_planning_cycle()
 
 
+## ADR 7: runs every planning tick regardless of what the agent is doing -
+## no _action_in_progress no-op guard - since abandoning a GoTo is nearly
+## free (Navigator just retargets from the current position on the next
+## _execute_current_action() call). Goal Commitment/Switch Margin (passed to
+## select_goal as current_goal/_switch_margin) is what keeps this from
+## thrashing: a challenger goal only ever reaches the reassignment below by
+## actually clearing the margin or by current_goal no longer being
+## achievable, so an in-progress GoTo's concrete grounded destination is
+## never touched by a tick that merely re-confirms the same goal or fails to
+## unseat it - the existing goal_name == current_goal early-return below
+## covers both cases identically to before Ticket 9.
 func run_planning_cycle() -> void:
-	if _action_in_progress:
-		return
-
 	_role_acquisition.check_and_acquire_role()
 
 	var world_state: WorldState = _build_world_state.call()
-	var goal: Dictionary = _goal_selector.select_goal(world_state)
+	var goal: Dictionary = _goal_selector.select_goal(world_state, current_goal, _switch_margin)
 
 	if goal.is_empty():
 		current_goal = ""
@@ -108,9 +119,21 @@ func on_action_completed() -> void:
 
 	_action_index += 1
 
+	# ADR 7: a plan that finishes cleanly replans immediately rather than
+	# idling until the next planningInterval tick - same treatment as the
+	# "remaining plan invalid" branch below, which already does this. Bounded
+	# recursion, not the unbounded kind _handle_action_failure's own doc
+	# comment guards against: each hop here only follows a *successful*,
+	# real state change (e.g. DepositResource actually clearing held_item),
+	# so the set of instantly-achievable goals strictly shrinks each time -
+	# it cannot revisit the same world state and loop. A goal requiring
+	# travel (GoTo has no synchronous completion) or Idle (whose completion
+	# is always an Action Failure by construction, never a natural one - see
+	# Ticket 6) breaks the chain within a few hops in the worst case.
 	if _action_index >= current_plan.size():
 		current_plan = []
 		current_goal = ""
+		run_planning_cycle()
 		return
 
 	var remaining_plan: Array = current_plan.slice(_action_index)

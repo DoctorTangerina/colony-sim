@@ -22,19 +22,42 @@ func get_role_component() -> Node:
 	return _role_component
 
 
-func select_goal(world_state: WorldState) -> Dictionary:
+## Goal Commitment / Switch Margin (ADR 7, CONTEXT.md): under full reactivity
+## every achievable goal is re-scored every planning tick, even mid-walk, so
+## a bare "always take the best scorer" would thrash between closely-scored
+## or intermittently-achievable goals. current_goal_name is the goal the
+## caller is already committed to; a challenger only pre-empts it by scoring
+## more than switch_margin above it. If current_goal_name is empty or no
+## longer among this tick's achievable candidates (its own precondition/
+## effects state moved on), there is nothing to commit to and the top
+## scorer wins outright, same as the no-margin default (switch_margin's
+## default of 0.0 combined with an empty current_goal_name reproduces the
+## pre-ADR-7 behavior exactly, so existing no-arg callers are unaffected).
+func select_goal(world_state: WorldState, current_goal_name: String = "", switch_margin: float = 0.0) -> Dictionary:
 	var candidates := _get_achievable_goals(world_state)
 	if candidates.is_empty():
 		return {}
 
 	var best: Dictionary = candidates[0]
 	var best_score: float = -1.0
+	var current_entry: Dictionary = {}
+	var current_score: float = -1.0
 	for goal in candidates:
 		var score := _score_goal(goal, world_state)
 		if score > best_score:
 			best_score = score
 			best = goal
-	return best
+		if goal["name"] == current_goal_name:
+			current_entry = goal
+			current_score = score
+
+	if current_goal_name.is_empty() or current_entry.is_empty() or best["name"] == current_goal_name:
+		return best
+
+	if best_score > current_score + switch_margin:
+		return best
+
+	return current_entry
 
 
 func get_available_goals(world_state: WorldState) -> Array[Dictionary]:

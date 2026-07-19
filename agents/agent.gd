@@ -25,6 +25,7 @@ var resource_manager_ref: Node = null
 var _is_dead: bool = false
 
 var _planning_interval: float = 2.0
+var _switch_margin: float = 0.0
 var _agent_speed: float = 200.0
 var _discovery_radius: float = 50.0
 var _interaction_radius: float = 50.0
@@ -56,6 +57,7 @@ func _load_sim_config() -> void:
 	var data: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
 	_agent_speed = data.get("agentSpeed", 200.0)
 	_planning_interval = data.get("planningInterval", 2.0)
+	_switch_margin = data.get("switchMargin", 2.0)
 	_discovery_radius = data.get("discoveryRadius", 50.0)
 	_interaction_radius = data.get("interactionRadius", 50.0)
 	if not data.has("mapMinX") or not data.has("mapMinY") or not data.has("mapMaxX") or not data.has("mapMaxY"):
@@ -74,7 +76,7 @@ func _setup_modules() -> void:
 
 	_role_acquisition.role_changed.connect(_on_role_changed)
 
-	_goap_cycle.setup(self, _planner, _goal_selector, _role_acquisition, _build_world_state, _planning_interval)
+	_goap_cycle.setup(self, _planner, _goal_selector, _role_acquisition, _build_world_state, _planning_interval, _switch_margin)
 	action_completed.connect(_goap_cycle.on_action_completed)
 
 
