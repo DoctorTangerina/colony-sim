@@ -1,16 +1,16 @@
 {
-  "update_hz": 5,
+  "update_hz": 60,
   "panel_width": 450,
   "tree_columns": ["agent_id", "role", "action"],
   "inspector_sections": ["role", "goal", "stats", "action", "plan"],
   "plan_expanded_by_default": false,
   "org_sections": ["storage", "role_market"],
   "colors": {
-    "background": "#1e1e1e",
-    "panel": "#2d2d2d",
-    "text": "#e0e0e0",
-    "text_dim": "#888888",
-    "accent": "#4ec9b0",
-    "role_colors": {}
+	"background": "#1e1e1e",
+	"panel": "#2d2d2d",
+	"text": "#e0e0e0",
+	"text_dim": "#888888",
+	"accent": "#4ec9b0",
+	"role_colors": {}
   }
 }
