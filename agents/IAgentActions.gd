@@ -69,3 +69,12 @@ func get_world_bounds() -> Rect2:
 
 func deposit_at_nest(_item_type: String) -> void:
 	pass
+
+
+## ADR 6: called by GoapCycle when verify-by-effect finds a just-completed
+## Pickup action's declared effect doesn't hold - direct evidence (the agent
+## was physically at this position; extraction yielded nothing) that the
+## Blackboard's matching entry is stale. Carried independently of the
+## discovery carry-slot until ReportDepletion clears it at the Nest.
+func record_failed_report(_resource_type: String, _position: Vector2) -> void:
+	pass

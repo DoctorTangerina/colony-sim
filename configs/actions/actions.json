@@ -24,6 +24,12 @@
     "effects": { "has_unreported_discovery": false }
   },
   {
+    "name": "ReportDepletion",
+    "cost": 0.3,
+    "preconditions": { "at_nest": true, "has_failed_report": true },
+    "effects": { "has_failed_report": false }
+  },
+  {
     "name": "PickupFood",
     "cost": 1.0,
     "preconditions": { "has_item": false, "at_food_position": true },

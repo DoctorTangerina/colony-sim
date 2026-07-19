@@ -71,7 +71,7 @@ func validate_plan(plan: Array, world_state: WorldState) -> bool:
 		return false
 	var state := world_state.clone()
 	for action_name in plan:
-		var action := _get_action_by_name(action_name)
+		var action := get_action_by_name(action_name)
 		if action.is_empty():
 			return false
 		if not GoapUtils.state_satisfies(state, action.get("preconditions", {})):
@@ -163,7 +163,11 @@ func _get_applicable_actions(_world_state: WorldState, allowed_actions: Array) -
 	return result
 
 
-func _get_action_by_name(action_name: String) -> Dictionary:
+## Public (unlike get_goal_by_name's already-public counterpart, this stayed
+## private until GoapCycle's verify-by-effect check needed it too - ADR 6) so
+## callers outside the planner can look up an action's declared effects for
+## the same state_satisfies check validate_plan already uses.
+func get_action_by_name(action_name: String) -> Dictionary:
 	for action in _actions:
 		if action["name"] == action_name:
 			return action

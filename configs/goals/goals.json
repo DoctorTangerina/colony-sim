@@ -42,6 +42,12 @@
 	"effects": { "high_hunger": false, "has_food": false }
   },
   {
+	"name": "ReportDepletion",
+	"desirability": 9.0,
+	"preconditions": { "has_failed_report": true },
+	"effects": { "has_failed_report": false }
+  },
+  {
 	"name": "Rest",
 	"desirability": 8.0,
 	"preconditions": {},

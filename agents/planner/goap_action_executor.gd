@@ -27,6 +27,7 @@ static func _ensure_registry() -> void:
 	_registry[GoapActions.DEPOSIT_RESOURCE] = _deposit_resource
 	_registry[GoapActions.RANDOM_EXPLORE] = _explore
 	_registry[GoapActions.REPORT_RESOURCE] = _report_resource
+	_registry[GoapActions.REPORT_DEPLETION] = _report_depletion
 
 
 static func _default_handler(agent: IAgentActions) -> void:
@@ -103,4 +104,29 @@ static func _report_resource(agent) -> void:
 		blackboard.add_entry(res_type, res_pos)
 
 	agent.clear_discovered_resource()
+	agent.complete_action()
+
+
+## Mirrors _report_resource's Nest-only write path (ADR 6): removes the
+## carried failed_resource_type/pos entry from the Blackboard once at_nest,
+## rather than the field ever writing to it directly. remove_entries is a
+## no-op when nothing matches, so a second agent's report for an
+## already-removed entry is a safe no-op, not a special case to guard against.
+static func _report_depletion(agent) -> void:
+	var res_type: String = agent.get("failed_resource_type")
+	var res_pos: Vector2 = agent.get("failed_resource_pos")
+
+	if res_type.is_empty() or not agent.nest_ref:
+		agent.clear_failed_report()
+		agent.complete_action()
+		return
+
+	var blackboard = null
+	if agent.nest_ref.has_method("get_blackboard"):
+		blackboard = agent.nest_ref.get_blackboard()
+
+	if blackboard and blackboard.has_method("remove_entries"):
+		blackboard.remove_entries(res_type, res_pos)
+
+	agent.clear_failed_report()
 	agent.complete_action()

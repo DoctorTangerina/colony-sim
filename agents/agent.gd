@@ -30,6 +30,8 @@ var _discovery_radius: float = 50.0
 var _interaction_radius: float = 50.0
 var discovered_resource_type: String = ""
 var discovered_resource_pos: Vector2 = Vector2.ZERO
+var failed_resource_type: String = ""
+var failed_resource_pos: Vector2 = Vector2.ZERO
 var _known_positions: Dictionary = {}
 
 var _map_min: Vector2
@@ -140,10 +142,11 @@ func _build_world_state() -> WorldState:
 	var has_known_food: bool = _known_positions.has("Food")
 	var has_known_wood: bool = _known_positions.has("Wood")
 	var has_unreported_discovery: bool = not discovered_resource_type.is_empty()
+	var has_failed_report: bool = not failed_resource_type.is_empty()
 
 	return WorldState.build(held_item, energy, hunger, at_nest, food_visible, wood_visible,
 		_near_unreported_resource, has_known_food, has_known_wood, has_unreported_discovery,
-		at_food_position, at_wood_position)
+		at_food_position, at_wood_position, has_failed_report)
 
 
 ## Scans for a nearby resource the Blackboard doesn't know about yet and
@@ -259,6 +262,24 @@ func complete_action() -> void:
 func clear_discovered_resource() -> void:
 	discovered_resource_type = ""
 	discovered_resource_pos = Vector2.ZERO
+
+
+## ADR 6: called by GoapCycle once it detects (via verify-by-effect) that a
+## Pickup action's declared effect didn't hold - direct evidence the agent's
+## own current position is a stale Blackboard entry for resource_type. Single
+## carry slot, independent of discovered_resource_type/pos: a report already
+## pending is kept until ReportDepletion clears it, rather than overwritten
+## by a second failure.
+func record_failed_report(resource_type: String, position: Vector2) -> void:
+	if not failed_resource_type.is_empty():
+		return
+	failed_resource_type = resource_type
+	failed_resource_pos = position
+
+
+func clear_failed_report() -> void:
+	failed_resource_type = ""
+	failed_resource_pos = Vector2.ZERO
 
 
 func get_world_bounds() -> Rect2:

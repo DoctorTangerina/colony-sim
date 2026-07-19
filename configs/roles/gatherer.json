@@ -3,12 +3,14 @@
   "allowedGoals": [
     "CollectFood",
     "CollectWood",
-    "DepositResource"
+    "DepositResource",
+    "ReportDepletion"
   ],
   "allowedActions": [
     "PickupFood",
     "PickupWood",
-    "DepositResource"
+    "DepositResource",
+    "ReportDepletion"
   ],
   "priorityModifiers": {
     "CollectFood": 2.0,
