@@ -84,13 +84,11 @@ static func _goto(action_name: String, agent: IAgentActions) -> void:
 	agent.complete_action()
 
 
+## Target selection (Explored-Trail-biased, ADR 9) lives behind
+## pick_explore_target() - this handler only dispatches the walk, same as
+## every other GoTo-shaped action.
 static func _explore(agent: IAgentActions) -> void:
-	var bounds: Rect2 = agent.get_world_bounds()
-	var random_pos := Vector2(
-		randf_range(bounds.position.x, bounds.position.x + bounds.size.x),
-		randf_range(bounds.position.y, bounds.position.y + bounds.size.y)
-	)
-	agent.move_to(random_pos)
+	agent.move_to(agent.pick_explore_target())
 
 
 ## Left untyped/untouched: writes directly to the Blackboard node rather than

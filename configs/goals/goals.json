@@ -3,7 +3,7 @@
 	"name": "Explore",
 	"desirability": 3.0,
 	"preconditions": {},
-	"effects": { "resource_visible": true }
+	"effects": { "at_explore_position": true }
   },
   {
 	"name": "ReportDiscovery",

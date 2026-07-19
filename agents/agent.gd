@@ -94,6 +94,7 @@ func _process(delta: float) -> void:
 		return
 
 	_scan_for_discovery()
+	_mark_explored_trail()
 	_navigator.process(delta)
 	_goap_cycle.process(delta)
 
@@ -173,6 +174,18 @@ func _scan_for_discovery() -> void:
 					discovered_resource_type = res_node.resource_type
 					discovered_resource_pos = res_node.global_position
 				break
+
+
+## Passive, continuous, role-blind (CONTEXT.md: Explored Trail; ADR 9) -
+## every agent's incidental movement marks coverage, not just Explorers',
+## which is what lets non-scouting roles' ordinary travel give Explorers free
+## coverage of already-visited ground.
+func _mark_explored_trail() -> void:
+	if not nest_ref or not nest_ref.has_method("get_explored_trail"):
+		return
+	var trail = nest_ref.get_explored_trail()
+	if trail and trail.has_method("mark_visited"):
+		trail.mark_visited(global_position)
 
 
 func _on_arrived_at_target() -> void:
@@ -284,6 +297,24 @@ func clear_failed_report() -> void:
 
 func get_world_bounds() -> Rect2:
 	return Rect2(_map_min, _map_max - _map_min)
+
+
+## Delegates to the Nest's shared Explored Trail (ADR 9) so exploration
+## converges on covering the whole map instead of the same random hot spots
+## forever. Falls back to a plain uniform-random point (the old behavior)
+## when there's no Nest/trail to consult - e.g. bare-script test agents that
+## skip setup() entirely, same fallback shape as _build_world_state's
+## _nest_zone guard.
+func pick_explore_target() -> Vector2:
+	var bounds := get_world_bounds()
+	if nest_ref and nest_ref.has_method("get_explored_trail"):
+		var trail = nest_ref.get_explored_trail()
+		if trail and trail.has_method("pick_target"):
+			return trail.pick_target(bounds)
+	return Vector2(
+		randf_range(bounds.position.x, bounds.position.x + bounds.size.x),
+		randf_range(bounds.position.y, bounds.position.y + bounds.size.y)
+	)
 
 
 func get_role_component() -> Node:

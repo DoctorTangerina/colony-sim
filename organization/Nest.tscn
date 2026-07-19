@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://organization/nest.gd" id="1"]
 [ext_resource type="Script" path="res://organization/blackboard.gd" id="2"]
+[ext_resource type="Script" path="res://organization/explored_trail.gd" id="3"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_nest"]
 radius = 20.0
@@ -26,6 +27,9 @@ polygon = PackedVector2Array(20, 0, 10, 17.32, -10, 17.32, -20, 0, -10, -17.32, 
 
 [node name="Blackboard" type="Node" parent="."]
 script = ExtResource("2")
+
+[node name="ExploredTrail" type="Node" parent="."]
+script = ExtResource("3")
 
 [node name="TriggerZone" type="Area2D" parent="."]
 

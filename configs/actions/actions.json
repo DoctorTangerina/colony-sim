@@ -15,7 +15,7 @@
     "name": "RandomExplore",
     "cost": 0.5,
     "preconditions": {},
-    "effects": { "resource_visible": true }
+    "effects": { "at_explore_position": true }
   },
   {
     "name": "ReportResource",

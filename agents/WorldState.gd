@@ -25,6 +25,7 @@ extends Resource
 ## - at_wood_position (bool): a Wood resource node is within Interaction Range of the agent right now - distinct from wood_visible's Discovery Radius.
 ## - has_failed_report (bool): agent is carrying a verified Action Failure (Pickup found nothing at a known position) it has not yet reported to the Nest - independent of has_unreported_discovery (ADR 6).
 ## - is_idle (bool): always false, like enemy_near - Idle's declared effect (Ticket 6) targets a fact this schema never senses true, which is what keeps the Idle goal perpetually achievable (never "already satisfied") whenever nothing else is, mirroring Explore's own perpetual shape.
+## - at_explore_position (bool): always false, like is_idle/enemy_near - RandomExplore's honest effect (Ticket 7/ADR 9) is plain arrival at its own procedurally-chosen target, which by construction can never already be sensed true (the target doesn't exist until the action picks it), keeping Explore perpetually achievable rather than a one-shot goal. Distinct from the Explored Trail (organization/explored_trail.gd), which is never Planner-visible at all.
 var at_nest: bool = false
 var has_food: bool = false
 var has_wood: bool = false
@@ -43,6 +44,7 @@ var at_food_position: bool = false
 var at_wood_position: bool = false
 var has_failed_report: bool = false
 var is_idle: bool = false
+var at_explore_position: bool = false
 
 
 static func build(
@@ -79,6 +81,7 @@ static func build(
 	state.at_wood_position = at_wood_position
 	state.has_failed_report = has_failed_report
 	state.is_idle = false
+	state.at_explore_position = false
 	return state
 
 
@@ -134,7 +137,7 @@ func get_field_keys() -> Array:
 	return ["at_nest", "has_food", "has_wood", "has_item", "low_energy", "high_hunger",
 		"food_visible", "wood_visible", "resource_visible", "enemy_near", "near_unreported_resource",
 		"known_food_position", "known_wood_position", "has_unreported_discovery",
-		"at_food_position", "at_wood_position", "has_failed_report", "is_idle"]
+		"at_food_position", "at_wood_position", "has_failed_report", "is_idle", "at_explore_position"]
 
 
 func get_field(key: String) -> Variant:
@@ -157,6 +160,7 @@ func get_field(key: String) -> Variant:
 		"at_wood_position": return at_wood_position
 		"has_failed_report": return has_failed_report
 		"is_idle": return is_idle
+		"at_explore_position": return at_explore_position
 		_: return null
 
 
@@ -180,4 +184,5 @@ func set_field(key: String, value: Variant) -> void:
 		"at_wood_position": at_wood_position = value
 		"has_failed_report": has_failed_report = value
 		"is_idle": is_idle = value
+		"at_explore_position": at_explore_position = value
 		_: _fail_unrecognized_key(key)

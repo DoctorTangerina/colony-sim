@@ -71,6 +71,15 @@ func deposit_at_nest(_item_type: String) -> void:
 	pass
 
 
+## RandomExplore's target selection (Ticket 7/ADR 9): a point inside the map
+## bounds, biased away from ground the colony-shared Explored Trail already
+## covers. Kept behind this seam so GoapActionExecutor never reaches into
+## nest_ref/ExploredTrail directly, matching deposit_at_nest/attempt_pickup's
+## shape.
+func pick_explore_target() -> Vector2:
+	return Vector2.ZERO
+
+
 ## ADR 6: called by GoapCycle when verify-by-effect finds a just-completed
 ## Pickup action's declared effect doesn't hold - direct evidence (the agent
 ## was physically at this position; extraction yielded nothing) that the

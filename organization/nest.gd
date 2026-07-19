@@ -8,11 +8,13 @@ var wood_storage: int = 0
 var _thresholds: Dictionary = {}
 var _storage_states: Dictionary = {}
 var _blackboard: Node = null
+var _explored_trail: Node = null
 
 
 func _ready() -> void:
 	_load_thresholds()
 	_blackboard = $Blackboard
+	_explored_trail = $ExploredTrail
 	_setup_blackboard_cleanup()
 
 
@@ -80,6 +82,10 @@ func get_trigger_zone() -> Area2D:
 
 func get_blackboard() -> Node:
 	return _blackboard
+
+
+func get_explored_trail() -> Node:
+	return _explored_trail
 
 
 func _setup_blackboard_cleanup() -> void:
