@@ -61,9 +61,9 @@
   },
   {
 	"name": "GetFood",
-	"desirability": 5.0,
+	"desirability": 9.0,
 	"preconditions": { "food_stored": true, "high_hunger": true },
-	"effects": { "has_food": true }
+	"effects": { "high_hunger": false }
   },
   {
 	"name": "GetWood",

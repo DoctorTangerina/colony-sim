@@ -1,6 +1,7 @@
 {
   "enableEnemies": true,
   "enableDynamicRoles": true,
+  "distributionMode": "dynamic",
   "simulationSpeed": 1.0,
   "roleEvalInterval": 1.0,
   "roleCooldown": 10.0,
@@ -18,5 +19,5 @@
   "deathHunger": 100.0,
   "energyDrainPerAction": 5.0,
   "energyRecoveryPerSecond": 10.0,
-  "forcedRestExitEnergy": 10.0
+  "forcedRestExitEnergy": 100.0
 }

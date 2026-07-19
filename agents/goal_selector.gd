@@ -53,6 +53,8 @@ func select_goal(world_state: WorldState, current_goal_name: String = "", switch
 
 	if current_entry.is_empty() and not current_goal_name.is_empty():
 		current_entry = _relevant_but_already_satisfied(current_goal_name, world_state)
+		if current_entry.is_empty():
+			current_entry = _sticky_get_food(current_goal_name, world_state)
 		if not current_entry.is_empty():
 			current_score = _score_goal(current_entry, world_state)
 
@@ -90,6 +92,43 @@ func _relevant_but_already_satisfied(goal_name: String, world_state: WorldState)
 	if not GoapUtils.state_satisfies(world_state, goal.get("preconditions", {})):
 		return {}
 	return goal
+
+
+## Keeps GetFood committed through a transient food_stored:false reading -
+## unlike Rest's case above, the goal's own precondition genuinely isn't met
+## (food_stored is real Nest contention, not a stale check), so
+## _get_achievable_goals correctly excludes it and there's no plan to reuse.
+## Without this, a hungry agent still mid-walk to the Nest (or that just
+## found the pantry empty) loses "GetFood" as best["name"] the instant a
+## Gatherer beats it to the last unit, which defeats GoapCycle's
+## goal_name == current_goal early-return and yanks it onto whatever's best
+## among unrelated goals (Explore, Idle...) - with no memory that it was
+## trying to eat, and no reason to ever try again before starving. Synthesizing
+## a plan here bypasses create_plan's honest achievability check on purpose:
+## the retry is cheap (GetResource[Food]'s own preconditions make a genuine
+## failure a harmless no-op, caught by the ordinary Action Failure path same
+## as any other honest miss) and the alternative is silently giving up on
+## survival. Scoped to GetFood only, not a general "stay committed to
+## anything" policy, since Food is the sole resource with a hunger clock
+## behind it and this is the goal a role can never afford to
+## deprioritize once it's underway.
+func _sticky_get_food(goal_name: String, world_state: WorldState) -> Dictionary:
+	if goal_name != "GetFood":
+		return {}
+	if not world_state.high_hunger:
+		return {}
+	if not _goal_is_permitted(goal_name):
+		return {}
+	var goal: Dictionary = _planner.get_goal_by_name(goal_name)
+	if goal.is_empty():
+		return {}
+	var goal_with_plan: Dictionary = goal.duplicate()
+	var get_food_action := GetResourceGrounding.action_name("Food")
+	if world_state.at_nest:
+		goal_with_plan["plan"] = [get_food_action, GoapActions.EAT]
+	else:
+		goal_with_plan["plan"] = [GotoGrounding.action_name(GotoGrounding.NEST_KIND), get_food_action, GoapActions.EAT]
+	return goal_with_plan
 
 
 func _goal_is_permitted(goal_name: String) -> bool:

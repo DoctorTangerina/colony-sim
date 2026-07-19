@@ -23,8 +23,20 @@ extends Node
 ## role-blind and structurally required regardless of role, the same
 ## "jammed carry-slot up to total role paralysis" failure mode this doc
 ## comment already describes.
-const GOALS: Array = ["ReportDiscovery", "Idle", "Eat", "Rest"]
-const ACTIONS: Array = [GoapActions.GOTO, GoapActions.REPORT_RESOURCE, GoapActions.IDLE]
+## GetFood/GetResource[Food] are registered here for the same reason, one
+## layer deeper: Eat being universal only matters once has_food:true is
+## reachable, and until now the only paths there (CollectFood, GetFood)
+## lived exclusively in Gatherer's allowedGoals/allowedActions - every other
+## role (Explorer, Guard, freshly-Unassigned) had zero route to ever holding
+## food, so Eat was universal in name only for them and they starved on a
+## fixed deathHunger timer with no possible intervention. GetResource[Food]
+## is listed by exact name, not the GetResource[ prefix - GetResource[Wood]
+## stays Gatherer-only, since Wood isn't eaten and restocking it is ordinary
+## colony logistics, not a survival act. CollectFood/CollectWood/GetWood
+## stay Gatherer-only too: grabbing already-stocked food to eat is universal
+## survival, but foraging the field or restocking Wood remains a job.
+const GOALS: Array = ["ReportDiscovery", "Idle", "Eat", "Rest", "GetFood"]
+const ACTIONS: Array = [GoapActions.GOTO, GoapActions.REPORT_RESOURCE, GoapActions.IDLE, "GetResource[Food]"]
 
 
 static func is_universal_goal(goal_name: String) -> bool:

@@ -21,11 +21,18 @@ var _planning_timer: float = 0.0
 var _action_index: int = 0
 var _action_in_progress: bool = false
 var _energy_drain_per_action: float = 5.0
+var _synchronous_replan_depth: int = 0
 
 ## Actions whose completion never costs energy (SPEC.md Ticket 02) - Eat/Rest
 ## exist to restore energy/hunger, and Idle is the passive-recovery fallback;
 ## draining any of them would partially undercut what they exist to restore.
 const _ENERGY_DRAIN_EXEMPT: Array = [GoapActions.EAT, GoapActions.REST, GoapActions.IDLE]
+
+## Backstop against a same-frame oscillating action pair (see
+## on_action_completed's "clean finish, replan immediately" branch) hanging
+## the frame - generous enough to never trip on a legitimate deep chain of
+## distinct successful actions.
+const _MAX_SYNCHRONOUS_REPLAN_DEPTH: int = 50
 
 
 func setup(
@@ -142,19 +149,28 @@ func on_action_completed() -> void:
 
 	# ADR 7: a plan that finishes cleanly replans immediately rather than
 	# idling until the next planningInterval tick - same treatment as the
-	# "remaining plan invalid" branch below, which already does this. Bounded
-	# recursion, not the unbounded kind _handle_action_failure's own doc
-	# comment guards against: each hop here only follows a *successful*,
-	# real state change (e.g. DepositResource actually clearing held_item),
-	# so the set of instantly-achievable goals strictly shrinks each time -
-	# it cannot revisit the same world state and loop. A goal requiring
-	# travel (GoTo has no synchronous completion) or Idle (whose completion
-	# is always an Action Failure by construction, never a natural one - see
-	# Ticket 6) breaks the chain within a few hops in the worst case.
+	# "remaining plan invalid" branch below, which already does this. Usually
+	# bounded on its own: each hop only follows a *successful* state change,
+	# and a goal requiring travel (GoTo has no synchronous completion) or Idle
+	# (whose completion is always an Action Failure by construction - Ticket
+	# 6) breaks the chain within a few hops in the worst case. That's not a
+	# guarantee, though - two actions that are exact inverses (e.g. a
+	# same-frame withdraw-then-deposit pair) can oscillate through this path
+	# forever with no travel leg to stop at, which is exactly what happened
+	# before GetResource[Kind] was gated on high_hunger (see
+	# GetResourceGrounding). _synchronous_replan_depth is the backstop for
+	# the next config combination nobody anticipated: past the cap, drop back
+	# to the ordinary throttled cadence instead of hanging the frame.
 	if _action_index >= current_plan.size():
 		current_plan = []
 		current_goal = ""
+		_synchronous_replan_depth += 1
+		if _synchronous_replan_depth > _MAX_SYNCHRONOUS_REPLAN_DEPTH:
+			push_error("GoapCycle: %s exceeded %s synchronous replans in a row (last action %s) - likely an oscillating action pair; deferring to next planning tick" % [_agent.get("agent_id"), _MAX_SYNCHRONOUS_REPLAN_DEPTH, completed_action])
+			_synchronous_replan_depth = 0
+			return
 		run_planning_cycle()
+		_synchronous_replan_depth = 0
 		return
 
 	var remaining_plan: Array = current_plan.slice(_action_index)
@@ -205,8 +221,15 @@ func _handle_action_failure(action_name: String) -> void:
 	# untouched defers the retry to process()'s next ordinary tick - the same
 	# cadence every other "nothing to do right now" case in this cycle
 	# already uses, and a real frame boundary a synchronous call is not.
+	#
+	# GetFood is the one exception to clearing current_goal too: goal_selector's
+	# sticky commitment (_sticky_get_food) only ever gets a chance to fire when
+	# current_goal_name arrives non-empty, so wiping it here on an honest
+	# "pantry was empty" miss would silently drop the retry - the same
+	# giving-up-on-survival gap the sticky commitment exists to close.
 	current_plan = []
-	current_goal = ""
+	if current_goal != "GetFood":
+		current_goal = ""
 
 
 func _pickup_resource_type(action_name: String) -> String:

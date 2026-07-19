@@ -13,6 +13,7 @@ func _ready() -> void:
 	_connect_resources(rm)
 	await _spawn_agents(nest, rm)
 	_connect_om(nest)
+	_maybe_start_metrics_logger(nest)
 
 
 func _connect_resources(rm: Node) -> void:
@@ -26,7 +27,7 @@ func _connect_resources(rm: Node) -> void:
 ## resource_manager.gd already guards against when spawning onto the navmesh.
 func _spawn_agents(nest: Node2D, rm: Node) -> void:
 	var data: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
-	var agent_count: int = data.get("agentCount", 8)
+	var agent_count: int = ExperimentCLI.get_int("agent-count", data.get("agentCount", 8))
 	if agent_count <= 0:
 		return
 
@@ -59,6 +60,18 @@ func _connect_om(nest: Node2D) -> void:
 	var om = get_node_or_null("/root/OrganizationManager")
 	if om and om.has_method("setup"):
 		om.setup(nest)
+
+
+## ADR 12: opt-in only - a normal interactive run passes no --log-metrics
+## flag and never instances this, never touches the filesystem for it.
+func _maybe_start_metrics_logger(nest: Node2D) -> void:
+	if not ExperimentCLI.has_flag("log-metrics"):
+		return
+	var om := get_node_or_null("/root/OrganizationManager")
+	var logger := MetricsLogger.new()
+	logger.name = "MetricsLogger"
+	add_child(logger)
+	logger.setup(nest, om)
 
 
 func _on_agent_died(agent_id: String, _last_role: String) -> void:

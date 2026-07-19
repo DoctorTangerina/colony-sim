@@ -5,6 +5,12 @@
 .godot/
 /android/
 
+# generated experiment data and tooling env (ADR 12)
+experiments/*/results/
+experiments/*/analysis/
+experiments/*/failed_runs.log
+experiments/*/.venv/
+
 # agent files
 docs/*
 .scratch/*

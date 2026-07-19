@@ -16,6 +16,7 @@ var _death_counter: int = 0
 var _eval_timer: float = 0.0
 var _eval_interval: float = 1.0
 var _dynamic_roles_enabled: bool = true
+var _distribution_mode: String = "dynamic"
 var _role_cooldown: float = 10.0
 var _min_unassigned_threshold: int = 5
 var _nest_ref: Node = null
@@ -25,6 +26,16 @@ var _cached_targets: Dictionary = {}
 
 
 func _ready() -> void:
+	# ADR 12: applied here, before anything else, because OrganizationManager
+	# is the project's sole autoload (AGENTS.md) and therefore the first
+	# script whose _ready() runs at all - earlier than resource_manager.gd's,
+	# whose _ready() is the first thing that actually calls randf_range. Not
+	# a Threshold Policy concern by nature, just the earliest hook available
+	# without adding a second autoload.
+	var seed_override := ExperimentCLI.get_int("seed", -1)
+	if seed_override >= 0:
+		seed(seed_override)
+
 	_load_config()
 	_load_nest_thresholds()
 	_load_role_defs()
@@ -58,6 +69,7 @@ func _load_config() -> void:
 	var data: Dictionary = ConfigLoader.load_dict("res://configs/simulation.json")
 	_eval_interval = data.get("roleEvalInterval", 1.0)
 	_dynamic_roles_enabled = data.get("enableDynamicRoles", true)
+	_distribution_mode = ExperimentCLI.get_string("distribution-mode", data.get("distributionMode", "dynamic"))
 	_role_cooldown = data.get("roleCooldown", 10.0)
 	_min_unassigned_threshold = data.get("minUnassignedThreshold", 5)
 
@@ -328,29 +340,50 @@ func _evaluate_roles() -> void:
 			withdraw_requests(role_name, mini(-deficit, pending))
 
 
-func _compute_target_distribution(food: int, wood: int, total: int, known: Dictionary) -> Dictionary:
+## ADR 12: an experiment-only alternative to the rule-based computation below,
+## for comparing the need-based policy against a static, resource-blind
+## baseline. Ignores food/wood/known entirely - a fixed 50/50 Gatherer/
+## Explorer split every evaluation, regardless of colony state. Guard (and
+## any other role without an explicit split here) targets 0, same as its
+## zeroed/dormant distribution rule already yields in dynamic mode.
+func _compute_static_target_distribution(total: int) -> Dictionary:
 	var result := {}
 
 	for role_name in _role_defs:
-		var def: Dictionary = _role_defs[role_name]
-		var dist: Dictionary = def.get("distribution", {})
-		var rules: Array = dist.get("rules", [])
-		var target := 0
+		if role_name == "Gatherer" or role_name == "Explorer":
+			result[role_name] = ceili(total * 0.5)
+		else:
+			result[role_name] = 0
 
-		for rule in rules:
-			if rule.get("default", false):
-				target = maxi(0, ceili(total * rule.get("percent", 0.0)))
-				break
+	return result
 
-			var conditions: Array = rule.get("conditions", [])
-			if conditions.is_empty():
-				continue
 
-			if _conditions_met(conditions, rule.get("match", "any"), food, wood, total, known):
-				target = maxi(1, ceili(total * rule.get("percent", 0.0)))
-				break
+func _compute_target_distribution(food: int, wood: int, total: int, known: Dictionary) -> Dictionary:
+	var result := {}
 
-		result[role_name] = target
+	if _distribution_mode == "static":
+		result = _compute_static_target_distribution(total)
+	else:
+		for role_name in _role_defs:
+			var def: Dictionary = _role_defs[role_name]
+			var dist: Dictionary = def.get("distribution", {})
+			var rules: Array = dist.get("rules", [])
+			var target := 0
+
+			for rule in rules:
+				if rule.get("default", false):
+					target = maxi(0, ceili(total * rule.get("percent", 0.0)))
+					break
+
+				var conditions: Array = rule.get("conditions", [])
+				if conditions.is_empty():
+					continue
+
+				if _conditions_met(conditions, rule.get("match", "any"), food, wood, total, known):
+					target = maxi(1, ceili(total * rule.get("percent", 0.0)))
+					break
+
+			result[role_name] = target
 
 	if total >= _min_unassigned_threshold:
 		result["Unassigned"] = maxi(result.get("Unassigned", 0), 1)

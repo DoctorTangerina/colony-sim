@@ -37,6 +37,21 @@ func _load_definitions() -> void:
 	var entries: Array = ConfigLoader.load_array("res://configs/resources.json")
 	for entry in entries:
 		resource_definitions[entry["type"]] = entry
+	_apply_respawn_time_override()
+
+
+## ADR 12: the sweep's "scarcity" lever - overrides respawnTime for every
+## resource type uniformly (Food and Wood move together, per the experiment
+## design) when --respawn-time is passed. maxAmount is deliberately left
+## alone; a run with no CLI args leaves resource_definitions exactly as
+## loaded from JSON.
+func _apply_respawn_time_override() -> void:
+	var respawn_override: float = ExperimentCLI.get_float("respawn-time", -1.0)
+	if respawn_override < 0.0:
+		return
+	for type_name in resource_definitions:
+		resource_definitions[type_name]["respawnTime"] = respawn_override
+
 
 func _spawn_initial_nodes() -> void:
 	for type_name in resource_definitions:

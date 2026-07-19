@@ -5,6 +5,7 @@ signal storage_abundant(resource_type: String)
 
 var food_storage: int = 0
 var wood_storage: int = 0
+var _deposit_count: int = 0
 var _thresholds: Dictionary = {}
 var _storage_states: Dictionary = {}
 var _blackboard: Node = null
@@ -30,10 +31,19 @@ func _load_thresholds() -> void:
 func deposit(resource_type: String, amount: int) -> void:
 	if resource_type == "Food":
 		food_storage += amount
+		_deposit_count += 1
 		_check_thresholds("Food", food_storage)
 	elif resource_type == "Wood":
 		wood_storage += amount
+		_deposit_count += 1
 		_check_thresholds("Wood", wood_storage)
+
+
+## ADR 12 throughput metric: counts completed deposits, not units deposited -
+## every call to deposit() is one DepositResource action having completed
+## (agent.gd's deposit_at_nest() is the only caller), regardless of amount.
+func get_deposit_count() -> int:
+	return _deposit_count
 
 
 ## Honest withdrawal (ADR 6-adjacent): returns the amount actually taken, 0 if
