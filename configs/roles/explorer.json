@@ -4,8 +4,7 @@
     "Explore"
   ],
   "allowedActions": [
-    "RandomExplore",
-    "ReportResource"
+    "RandomExplore"
   ],
   "priorityModifiers": {
     "Explore": 2.0,
