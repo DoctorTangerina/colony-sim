@@ -51,6 +51,11 @@ func select_goal(world_state: WorldState, current_goal_name: String = "", switch
 			current_entry = goal
 			current_score = score
 
+	if current_entry.is_empty() and not current_goal_name.is_empty():
+		current_entry = _relevant_but_already_satisfied(current_goal_name, world_state)
+		if not current_entry.is_empty():
+			current_score = _score_goal(current_entry, world_state)
+
 	if current_goal_name.is_empty() or current_entry.is_empty() or best["name"] == current_goal_name:
 		return best
 
@@ -64,6 +69,38 @@ func get_available_goals(world_state: WorldState) -> Array[Dictionary]:
 	return _get_achievable_goals(world_state)
 
 
+## Goal Commitment (CONTEXT.md) needs the currently-active goal to stay in
+## the Switch Margin comparison even once its own declared effect has come to
+## hold on its own - true for Rest specifically (SPEC.md Ticket 02), whose
+## effect (energy_critical: false) clears via continuous regen mid-execution,
+## independent of and before the async Rest action itself finishes.
+## _get_achievable_goals excludes it there (create_plan's ordinary already-
+## satisfied shortcut, correct for every synchronous goal/action pair, where
+## an effect can only become true once its own action actually runs) - this
+## only restores it to the comparison, using relevance (preconditions still
+## hold, same role/universal gating as any candidate) rather than fresh
+## achievability, since no new plan is needed: GoapCycle's own
+## goal_name == current_goal early-return keeps running the existing one.
+func _relevant_but_already_satisfied(goal_name: String, world_state: WorldState) -> Dictionary:
+	var goal: Dictionary = _planner.get_goal_by_name(goal_name)
+	if goal.is_empty():
+		return {}
+	if not _goal_is_permitted(goal_name):
+		return {}
+	if not GoapUtils.state_satisfies(world_state, goal.get("preconditions", {})):
+		return {}
+	return goal
+
+
+func _goal_is_permitted(goal_name: String) -> bool:
+	if UniversalCapabilities.is_universal_goal(goal_name):
+		return true
+	var allowed_goals: Array = []
+	if _role_component and _role_component.has_method("get_allowed_goals"):
+		allowed_goals = _role_component.get_allowed_goals()
+	return goal_name in allowed_goals
+
+
 ## Keeps the plan computed while checking achievability (attached under a
 ## "plan" key on a duplicate of the goal dict, additive so goal.get("name",
 ## ...)-style access elsewhere stays unmodified) instead of discarding it -
@@ -72,10 +109,6 @@ func get_available_goals(world_state: WorldState) -> Array[Dictionary]:
 ## world_state isn't mutated and nothing awaits between this call and that
 ## reuse within the same planning tick.
 func _get_achievable_goals(world_state: WorldState) -> Array[Dictionary]:
-	var allowed_goals: Array = []
-	if _role_component and _role_component.has_method("get_allowed_goals"):
-		allowed_goals = _role_component.get_allowed_goals()
-
 	var allowed_actions: Array = []
 	if _role_component and _role_component.has_method("get_allowed_actions"):
 		allowed_actions = _role_component.get_allowed_actions()
@@ -83,7 +116,7 @@ func _get_achievable_goals(world_state: WorldState) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for goal in _goals:
 		var goal_name: String = goal["name"]
-		if not UniversalCapabilities.is_universal_goal(goal_name) and not goal_name in allowed_goals:
+		if not _goal_is_permitted(goal_name):
 			continue
 		var preconds: Dictionary = goal.get("preconditions", {})
 		if GoapUtils.state_satisfies(world_state, preconds):

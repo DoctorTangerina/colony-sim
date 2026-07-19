@@ -20,6 +20,12 @@ var _switch_margin: float = 0.0
 var _planning_timer: float = 0.0
 var _action_index: int = 0
 var _action_in_progress: bool = false
+var _energy_drain_per_action: float = 5.0
+
+## Actions whose completion never costs energy (SPEC.md Ticket 02) - Eat/Rest
+## exist to restore energy/hunger, and Idle is the passive-recovery fallback;
+## draining any of them would partially undercut what they exist to restore.
+const _ENERGY_DRAIN_EXEMPT: Array = [GoapActions.EAT, GoapActions.REST, GoapActions.IDLE]
 
 
 func setup(
@@ -29,7 +35,8 @@ func setup(
 	role_acquisition: Node,
 	build_world_state: Callable,
 	planning_interval: float,
-	switch_margin: float = 0.0
+	switch_margin: float = 0.0,
+	energy_drain_per_action: float = 5.0
 ) -> void:
 	_agent = agent
 	_planner = planner
@@ -38,6 +45,7 @@ func setup(
 	_build_world_state = build_world_state
 	_planning_interval = planning_interval
 	_switch_margin = switch_margin
+	_energy_drain_per_action = energy_drain_per_action
 
 
 func process(delta: float) -> void:
@@ -73,6 +81,13 @@ func run_planning_cycle() -> void:
 	if goal_name == current_goal and current_plan.size() > 0 and _action_index < current_plan.size():
 		return
 
+	# A genuine goal switch (not a mere reconfirmation, filtered out above)
+	# that leaves a committed Rest must cut the regen trickle before the new
+	# plan dispatches (SPEC.md Ticket 02) - the other interrupt site is
+	# on_role_changed() below, for a role change firing mid-Rest.
+	if current_goal == GoapActions.REST:
+		_agent.stop_resting()
+
 	# goal["plan"] is the same plan GOAPGoalSelector already produced (and
 	# proved valid) while checking this goal's achievability this tick, on
 	# this same world_state - reusing it here (defect #8) instead of asking
@@ -100,6 +115,12 @@ func get_executing_action() -> String:
 func on_action_completed() -> void:
 	var completed_action: String = current_plan[_action_index] if _action_index < current_plan.size() else ""
 	_action_in_progress = false
+
+	# Flat upkeep cost (SPEC.md Ticket 02), applied before the verify-by-effect
+	# check below regardless of its outcome - this is the one place that
+	# already knows the completed action's name.
+	if not completed_action.is_empty() and not completed_action in _ENERGY_DRAIN_EXEMPT:
+		_agent.drain_energy(_energy_drain_per_action)
 
 	_role_acquisition.check_and_acquire_role()
 
@@ -199,6 +220,8 @@ func _pickup_resource_type(action_name: String) -> String:
 ## Called from agent.gd's role_changed handler - drops the in-flight plan
 ## immediately so a stale action never executes under the new role.
 func on_role_changed() -> void:
+	if current_goal == GoapActions.REST:
+		_agent.stop_resting()
 	current_goal = ""
 	current_plan = []
 	_action_index = 0

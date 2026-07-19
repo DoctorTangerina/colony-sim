@@ -11,7 +11,7 @@ extends Resource
 ## - has_food (bool): agent's held item is "Food".
 ## - has_wood (bool): agent's held item is "Wood".
 ## - has_item (bool): agent is holding "Food" or "Wood" (held item != "None").
-## - low_energy (bool): agent energy < 30.0.
+## - energy_critical (bool): hysteresis-gated - true once agent energy hits 0, clears again only once energy >= forcedRestExitEnergy (default 10.0). Not a pure function of the current energy value alone; see agent.gd's _update_energy_critical().
 ## - high_hunger (bool): agent hunger > 70.0.
 ## - food_visible (bool): a Food resource node is reachable near the agent right now.
 ## - wood_visible (bool): a Wood resource node is reachable near the agent right now.
@@ -30,7 +30,7 @@ var at_nest: bool = false
 var has_food: bool = false
 var has_wood: bool = false
 var has_item: bool = false
-var low_energy: bool = false
+var energy_critical: bool = false
 var high_hunger: bool = false
 var food_visible: bool = false
 var wood_visible: bool = false
@@ -49,7 +49,7 @@ var at_explore_position: bool = false
 
 static func build(
 	held_item: String,
-	energy: float,
+	energy_critical: bool,
 	hunger: float,
 	at_nest: bool,
 	food_visible: bool,
@@ -67,7 +67,7 @@ static func build(
 	state.has_food = held_item == "Food"
 	state.has_wood = held_item == "Wood"
 	state.has_item = held_item != "None"
-	state.low_energy = energy < 30.0
+	state.energy_critical = energy_critical
 	state.high_hunger = hunger > 70.0
 	state.food_visible = food_visible
 	state.wood_visible = wood_visible
@@ -134,7 +134,7 @@ func to_dict() -> Dictionary:
 
 
 func get_field_keys() -> Array:
-	return ["at_nest", "has_food", "has_wood", "has_item", "low_energy", "high_hunger",
+	return ["at_nest", "has_food", "has_wood", "has_item", "energy_critical", "high_hunger",
 		"food_visible", "wood_visible", "resource_visible", "enemy_near", "near_unreported_resource",
 		"known_food_position", "known_wood_position", "has_unreported_discovery",
 		"at_food_position", "at_wood_position", "has_failed_report", "is_idle", "at_explore_position"]
@@ -146,7 +146,7 @@ func get_field(key: String) -> Variant:
 		"has_food": return has_food
 		"has_wood": return has_wood
 		"has_item": return has_item
-		"low_energy": return low_energy
+		"energy_critical": return energy_critical
 		"high_hunger": return high_hunger
 		"food_visible": return food_visible
 		"wood_visible": return wood_visible
@@ -170,7 +170,7 @@ func set_field(key: String, value: Variant) -> void:
 		"has_food": has_food = value
 		"has_wood": has_wood = value
 		"has_item": has_item = value
-		"low_energy": low_energy = value
+		"energy_critical": energy_critical = value
 		"high_hunger": high_hunger = value
 		"food_visible": food_visible = value
 		"wood_visible": wood_visible = value

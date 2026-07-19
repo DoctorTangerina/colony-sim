@@ -55,6 +55,18 @@ func restore_energy(_amount: float) -> void:
 	pass
 
 
+func drain_energy(_amount: float) -> void:
+	pass
+
+
+func start_resting() -> void:
+	pass
+
+
+func stop_resting() -> void:
+	pass
+
+
 func complete_action() -> void:
 	pass
 

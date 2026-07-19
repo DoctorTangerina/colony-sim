@@ -15,5 +15,8 @@
   "planningInterval": 2.0,
   "switchMargin": 2.0,
   "hungerIncreasePerSecond": 1.0,
-  "deathHunger": 100.0
+  "deathHunger": 100.0,
+  "energyDrainPerAction": 5.0,
+  "energyRecoveryPerSecond": 10.0,
+  "forcedRestExitEnergy": 10.0
 }

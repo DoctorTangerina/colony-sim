@@ -9,7 +9,7 @@
     "name": "Rest",
     "cost": 2.0,
     "preconditions": { "at_nest": true },
-    "effects": { "low_energy": false }
+    "effects": { "energy_critical": false }
   },
   {
     "name": "RandomExplore",

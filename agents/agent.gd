@@ -31,6 +31,12 @@ var _discovery_radius: float = 50.0
 var _interaction_radius: float = 50.0
 var _hunger_increase_per_second: float = 1.0
 var _death_hunger: float = 100.0
+var _energy_drain_per_action: float = 5.0
+var _energy_recovery_per_second: float = 10.0
+var _forced_rest_exit_energy: float = 10.0
+
+var _energy_critical: bool = false
+var _is_resting: bool = false
 var discovered_resource_type: String = ""
 var discovered_resource_pos: Vector2 = Vector2.ZERO
 var failed_resource_type: String = ""
@@ -64,6 +70,9 @@ func _load_sim_config() -> void:
 	_interaction_radius = data.get("interactionRadius", 50.0)
 	_hunger_increase_per_second = data.get("hungerIncreasePerSecond", 1.0)
 	_death_hunger = data.get("deathHunger", 100.0)
+	_energy_drain_per_action = data.get("energyDrainPerAction", 5.0)
+	_energy_recovery_per_second = data.get("energyRecoveryPerSecond", 10.0)
+	_forced_rest_exit_energy = data.get("forcedRestExitEnergy", 10.0)
 	if not data.has("mapMinX") or not data.has("mapMinY") or not data.has("mapMaxX") or not data.has("mapMaxY"):
 		push_error("agent: simulation.json missing map bounds (mapMinX, mapMinY, mapMaxX, mapMaxY)")
 		return
@@ -80,7 +89,7 @@ func _setup_modules() -> void:
 
 	_role_acquisition.role_changed.connect(_on_role_changed)
 
-	_goap_cycle.setup(self, _planner, _goal_selector, _role_acquisition, _build_world_state, _planning_interval, _switch_margin)
+	_goap_cycle.setup(self, _planner, _goal_selector, _role_acquisition, _build_world_state, _planning_interval, _switch_margin, _energy_drain_per_action)
 	action_completed.connect(_goap_cycle.on_action_completed)
 
 
@@ -103,6 +112,7 @@ func _process(delta: float) -> void:
 	if _is_dead:
 		return
 
+	_process_resting(delta)
 	_scan_for_discovery()
 	_mark_explored_trail()
 	_navigator.process(delta)
@@ -113,6 +123,21 @@ func _process(delta: float) -> void:
 ## agent's current action, goal, or Rest state - uncoupled from GOAP entirely.
 func _update_hunger(delta: float) -> void:
 	hunger = minf(hunger + _hunger_increase_per_second * delta, 100.0)
+
+
+## Rest is the first Action besides GoTo whose completion isn't synchronous
+## with dispatch (SPEC.md Ticket 02) - energy recovers continuously here,
+## across as many frames as start_resting() stays in effect, rather than in
+## one instant jump. Hard-stops itself (no external caller needed) once
+## energy tops out at 100; anything short of that - a genuine goal switch or
+## a role change mid-Rest - cuts the trickle early via stop_resting().
+func _process_resting(delta: float) -> void:
+	if not _is_resting:
+		return
+	restore_energy(_energy_recovery_per_second * delta)
+	if energy >= 100.0:
+		_is_resting = false
+		complete_action()
 
 
 ## Guards against re-emitting agent_died once hunger has topped out. Energy
@@ -126,7 +151,20 @@ func _check_death() -> void:
 	agent_died.emit(agent_id, _role_component.get_role_name())
 
 
+## Hysteresis (SPEC.md Ticket 02) - not a pure function of the current energy
+## value alone: becomes true once energy bottoms out at 0, and only clears
+## back to false once energy recovers to _forced_rest_exit_energy. Updated
+## wherever Sensed Facts are assembled (_build_world_state), same as at_nest.
+func _update_energy_critical() -> void:
+	if energy <= 0.0:
+		_energy_critical = true
+	elif energy >= _forced_rest_exit_energy:
+		_energy_critical = false
+
+
 func _build_world_state() -> WorldState:
+	_update_energy_critical()
+
 	# The Nest's TriggerZone is the single "at the nest" definition
 	# (CONTEXT.md: Nest) - _nest_zone is only null for bare-script test
 	# agents that skip the scene's _ready()/setup() entirely.
@@ -163,7 +201,7 @@ func _build_world_state() -> WorldState:
 	var has_unreported_discovery: bool = not discovered_resource_type.is_empty()
 	var has_failed_report: bool = not failed_resource_type.is_empty()
 
-	return WorldState.build(held_item, energy, hunger, at_nest, food_visible, wood_visible,
+	return WorldState.build(held_item, _energy_critical, hunger, at_nest, food_visible, wood_visible,
 		_near_unreported_resource, has_known_food, has_known_wood, has_unreported_discovery,
 		at_food_position, at_wood_position, has_failed_report)
 
@@ -288,6 +326,25 @@ func reset_hunger() -> void:
 
 func restore_energy(amount: float) -> void:
 	energy = minf(energy + amount, 100.0)
+
+
+func drain_energy(amount: float) -> void:
+	energy = maxf(energy - amount, 0.0)
+
+
+## Begins continuous energy regen (_process_resting); dispatched once per
+## Rest commitment by GoapActionExecutor._rest, never re-called while Goal
+## Commitment keeps the same Rest goal active across planning ticks.
+func start_resting() -> void:
+	_is_resting = true
+
+
+## Cuts the regen trickle short without completing the action - mirrors an
+## abandoned GoTo. Called when a genuine goal switch leaves a committed Rest
+## (GoapCycle.run_planning_cycle) or a role change fires mid-Rest
+## (GoapCycle.on_role_changed). A no-op if not currently resting.
+func stop_resting() -> void:
+	_is_resting = false
 
 
 func complete_action() -> void:

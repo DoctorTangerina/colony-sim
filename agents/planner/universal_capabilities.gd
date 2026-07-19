@@ -13,8 +13,17 @@ extends Node
 ## Ticket 6 - the always-relevant, lowest-priority fallback every role
 ## (assigned or Unassigned) falls into once nothing else is relevant;
 ## role-gating it would reproduce the exact "stands frozen forever" gap it
-## exists to close.
-const GOALS: Array = ["ReportDiscovery", "Idle"]
+## exists to close. Eat/Rest are registered as of the survival-loop Ticket 02
+## (.scratch/survival-loop) - both were previously reachable by no role at
+## all (absent from is_universal_goal and from every role's allowedGoals; see
+## role_component.gd's separate GLOBAL_ACTIONS, which already made their
+## *actions* universal but had no goal-side counterpart), which is exactly
+## why Eat/Rest were "never selected in practice" before this ticket. Both
+## fit this file's own Universal Capability rationale: survival upkeep is
+## role-blind and structurally required regardless of role, the same
+## "jammed carry-slot up to total role paralysis" failure mode this doc
+## comment already describes.
+const GOALS: Array = ["ReportDiscovery", "Idle", "Eat", "Rest"]
 const ACTIONS: Array = [GoapActions.GOTO, GoapActions.REPORT_RESOURCE, GoapActions.IDLE]
 
 

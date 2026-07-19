@@ -40,9 +40,11 @@ static func _eat(agent: IAgentActions) -> void:
 	agent.complete_action()
 
 
+## Async/held (SPEC.md Ticket 02, first besides GoTo): starts the continuous
+## regen trickle rather than completing synchronously. The agent itself calls
+## complete_action() once energy tops out at 100 (agent._process_resting).
 static func _rest(agent: IAgentActions) -> void:
-	agent.restore_energy(40.0)
-	agent.complete_action()
+	agent.start_resting()
 
 
 ## Passive fallback recovery (CONTEXT.md: Idle) - a smaller restore than

@@ -2,43 +2,43 @@
   {
 	"name": "Explore",
 	"desirability": 3.0,
-	"preconditions": {},
+	"preconditions": { "energy_critical": false },
 	"effects": { "at_explore_position": true }
   },
   {
 	"name": "ReportDiscovery",
 	"desirability": 9.0,
-	"preconditions": { "has_unreported_discovery": true },
+	"preconditions": { "has_unreported_discovery": true, "energy_critical": false },
 	"effects": { "has_unreported_discovery": false }
   },
   {
 	"name": "CollectFood",
 	"desirability": 5.0,
-	"preconditions": { "known_food_position": true },
+	"preconditions": { "known_food_position": true, "energy_critical": false },
 	"effects": { "has_food": true }
   },
   {
 	"name": "CollectWood",
 	"desirability": 5.0,
-	"preconditions": { "known_wood_position": true },
+	"preconditions": { "known_wood_position": true, "energy_critical": false },
 	"effects": { "has_wood": true }
   },
   {
 	"name": "DepositResource",
 	"desirability": 6.0,
-	"preconditions": { "has_item": true },
+	"preconditions": { "has_item": true, "energy_critical": false },
 	"effects": { "has_item": false }
   },
   {
 	"name": "DefendNest",
 	"desirability": 8.0,
-	"preconditions": { "enemy_near": true },
+	"preconditions": { "enemy_near": true, "energy_critical": false },
 	"effects": { "enemy_near": false }
   },
   {
 	"name": "AttackEnemy",
 	"desirability": 7.0,
-	"preconditions": { "enemy_near": true },
+	"preconditions": { "enemy_near": true, "energy_critical": false },
 	"effects": { "enemy_near": false }
   },
   {
@@ -50,14 +50,14 @@
   {
 	"name": "ReportDepletion",
 	"desirability": 9.0,
-	"preconditions": { "has_failed_report": true },
+	"preconditions": { "has_failed_report": true, "energy_critical": false },
 	"effects": { "has_failed_report": false }
   },
   {
 	"name": "Rest",
 	"desirability": 8.0,
 	"preconditions": {},
-	"effects": { "low_energy": false }
+	"effects": { "energy_critical": false }
   },
   {
 	"name": "Idle",
