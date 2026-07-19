@@ -41,10 +41,21 @@ func get_available_goals(world_state: WorldState) -> Array[Dictionary]:
 	return _get_achievable_goals(world_state)
 
 
+## Keeps the plan computed while checking achievability (attached under a
+## "plan" key on a duplicate of the goal dict, additive so goal.get("name",
+## ...)-style access elsewhere stays unmodified) instead of discarding it -
+## GoapCycle.run_planning_cycle() reuses it directly rather than recomputing
+## an identical search a tick later (defect #8). Valid only because
+## world_state isn't mutated and nothing awaits between this call and that
+## reuse within the same planning tick.
 func _get_achievable_goals(world_state: WorldState) -> Array[Dictionary]:
 	var allowed_goals: Array = []
 	if _role_component and _role_component.has_method("get_allowed_goals"):
 		allowed_goals = _role_component.get_allowed_goals()
+
+	var allowed_actions: Array = []
+	if _role_component and _role_component.has_method("get_allowed_actions"):
+		allowed_actions = _role_component.get_allowed_actions()
 
 	var result: Array[Dictionary] = []
 	for goal in _goals:
@@ -53,12 +64,11 @@ func _get_achievable_goals(world_state: WorldState) -> Array[Dictionary]:
 			continue
 		var preconds: Dictionary = goal.get("preconditions", {})
 		if GoapUtils.state_satisfies(world_state, preconds):
-			var allowed_actions: Array = []
-			if _role_component and _role_component.has_method("get_allowed_actions"):
-				allowed_actions = _role_component.get_allowed_actions()
 			var plan = _planner.create_plan(goal_name, world_state, allowed_actions)
 			if not plan.is_empty():
-				result.append(goal)
+				var goal_with_plan: Dictionary = goal.duplicate()
+				goal_with_plan["plan"] = plan
+				result.append(goal_with_plan)
 	return result
 
 

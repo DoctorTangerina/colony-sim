@@ -62,20 +62,17 @@ func run_planning_cycle() -> void:
 	if goal_name == current_goal and current_plan.size() > 0 and _action_index < current_plan.size():
 		return
 
+	# goal["plan"] is the same plan GOAPGoalSelector already produced (and
+	# proved valid) while checking this goal's achievability this tick, on
+	# this same world_state - reusing it here (defect #8) instead of asking
+	# GOAPPlanner to search again is not an approximation, since nothing
+	# mutates world_state and nothing awaits between that check and here.
 	current_goal = goal_name
-	current_plan = _planner.create_plan(goal_name, world_state)
+	current_plan = goal.get("plan", [])
 	_action_index = 0
 
 	if current_plan.size() > 0:
-		if _planner.validate_plan(current_plan, world_state):
-			_execute_current_action()
-		else:
-			current_plan = _planner.create_plan(goal_name, world_state)
-			if current_plan.size() > 0 and _planner.validate_plan(current_plan, world_state):
-				_execute_current_action()
-			else:
-				current_goal = ""
-				current_plan = []
+		_execute_current_action()
 	else:
 		current_goal = ""
 		current_plan = []
