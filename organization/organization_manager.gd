@@ -311,7 +311,9 @@ func _evaluate_roles() -> void:
 	if total_agents == 0:
 		return
 
-	_cached_targets = _compute_target_distribution(food_storage, wood_storage, total_agents)
+	var known: Dictionary = _get_known_resource_types()
+
+	_cached_targets = _compute_target_distribution(food_storage, wood_storage, total_agents, known)
 
 	for role_name in _cached_targets:
 		var target: int = _cached_targets[role_name]
@@ -326,7 +328,7 @@ func _evaluate_roles() -> void:
 			withdraw_requests(role_name, mini(-deficit, pending))
 
 
-func _compute_target_distribution(food: int, wood: int, total: int) -> Dictionary:
+func _compute_target_distribution(food: int, wood: int, total: int, known: Dictionary) -> Dictionary:
 	var result := {}
 
 	for role_name in _role_defs:
@@ -344,7 +346,7 @@ func _compute_target_distribution(food: int, wood: int, total: int) -> Dictionar
 			if conditions.is_empty():
 				continue
 
-			if _conditions_met(conditions, rule.get("match", "any"), food, wood):
+			if _conditions_met(conditions, rule.get("match", "any"), food, wood, total, known):
 				target = maxi(1, ceili(total * rule.get("percent", 0.0)))
 				break
 
@@ -356,19 +358,51 @@ func _compute_target_distribution(food: int, wood: int, total: int) -> Dictionar
 	return result
 
 
+## Colony-wide knowledge of resource positions: does the Nest's Blackboard
+## hold at least one entry of this type? Mirrors the per-agent
+## known_food_position/known_wood_position Sensed Facts (agents/WorldState.gd)
+## but answers "does anyone in the colony know", not "do I" - the Threshold
+## Policy's own concern, since it reasons about the colony as a whole.
+func _get_known_resource_types() -> Dictionary:
+	var result := {"Food": false, "Wood": false}
+	if _nest_ref == null or not _nest_ref.has_method("get_blackboard"):
+		return result
+	var blackboard: Node = _nest_ref.get_blackboard()
+	if blackboard == null or not blackboard.has_method("get_entries"):
+		return result
+	result["Food"] = not blackboard.get_entries("Food").is_empty()
+	result["Wood"] = not blackboard.get_entries("Wood").is_empty()
+	return result
+
+
 ## A condition's level name gives its direction: "low" means at or below that
 ## threshold, "abundant" means at or above - so "Food low" and "Food abundant"
-## read the same way they're written in the role JSON.
-func _conditions_met(conditions: Array, match_mode: String, food: int, wood: int) -> bool:
+## read the same way they're written in the role JSON. "low" is a per-capita
+## floor, not a flat number: the colony always tries to keep at least one
+## unit of each resource in storage per agent, so the effective low threshold
+## is never below the current agent count even when nest.json configures a
+## smaller one - this floor lives only here, not in nest.gd's own copy (see
+## ADR 11). "known"/"unknown" are a separate axis - not a numeric threshold
+## against nest.json at all, but whether the colony's Blackboard holds any
+## entry of that resource type (the colony-wide counterpart of "known").
+func _conditions_met(conditions: Array, match_mode: String, food: int, wood: int, total_agents: int, known: Dictionary) -> bool:
 	var require_all: bool = match_mode == "all"
 
 	for cond in conditions:
 		var res_type: String = cond.get("type", "")
 		var level_name: String = cond.get("level", "low")
-		var threshold_val: int = get_threshold(res_type, level_name, 0)
 		var resource_val: int = food if res_type == "Food" else wood
 
-		var condition_met: bool = resource_val >= threshold_val if level_name == "abundant" else resource_val <= threshold_val
+		var condition_met: bool
+		if level_name == "known":
+			condition_met = known.get(res_type, false)
+		elif level_name == "unknown":
+			condition_met = not known.get(res_type, false)
+		elif level_name == "abundant":
+			condition_met = resource_val >= get_threshold(res_type, "abundant", 0)
+		else:
+			var low_threshold: int = maxi(get_threshold(res_type, "low", 0), total_agents)
+			condition_met = resource_val <= low_threshold
 
 		if require_all and not condition_met:
 			return false

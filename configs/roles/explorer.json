@@ -13,6 +13,8 @@
   },
   "distribution": {
     "rules": [
+      { "match": "all", "conditions": [{ "type": "Food", "level": "low" }, { "type": "Food", "level": "unknown" }], "percent": 0.6 },
+      { "match": "all", "conditions": [{ "type": "Wood", "level": "low" }, { "type": "Wood", "level": "unknown" }], "percent": 0.6 },
       { "match": "all", "conditions": [{ "type": "Food", "level": "abundant" }, { "type": "Wood", "level": "abundant" }], "percent": 0.4 },
       { "default": true, "percent": 0.2 }
     ]

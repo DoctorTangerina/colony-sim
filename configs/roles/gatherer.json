@@ -25,7 +25,8 @@
   },
   "distribution": {
     "rules": [
-      { "match": "any", "conditions": [{ "type": "Food", "level": "low" }, { "type": "Wood", "level": "low" }], "percent": 0.5 },
+      { "match": "all", "conditions": [{ "type": "Food", "level": "low" }, { "type": "Food", "level": "known" }], "percent": 0.5 },
+      { "match": "all", "conditions": [{ "type": "Wood", "level": "low" }, { "type": "Wood", "level": "known" }], "percent": 0.5 },
       { "default": true, "percent": 0 }
     ]
   },
