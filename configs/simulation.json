@@ -10,5 +10,6 @@
   "mapMinY": 32,
   "mapMaxX": 1120,
   "mapMaxY": 616,
-  "discoveryRadius": 50.0
+  "discoveryRadius": 50.0,
+  "interactionRadius": 50.0
 }

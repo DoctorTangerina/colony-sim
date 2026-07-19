@@ -12,7 +12,8 @@ func _ready() -> void:
 	_test_rest_restores_energy_and_completes()
 	_test_goto_nest_moves_to_nest_position()
 	_test_deposit_resource_deposits_and_completes()
-	_test_pickup_wood_moves_to_nearest_wood()
+	_test_pickup_wood_attempts_pickup_and_completes_without_moving()
+	_test_pickup_food_attempts_pickup_and_completes_without_moving()
 	_test_random_explore_moves_within_bounds()
 	_test_unregistered_action_falls_back_to_default()
 	_test_registered_actions_do_not_use_default_handler()
@@ -113,26 +114,42 @@ func _test_deposit_resource_deposits_and_completes() -> void:
 	_assert(agent._completed, "complete_action called")
 
 
-func _test_pickup_wood_moves_to_nearest_wood() -> void:
-	print("[Test] PickupWood moves to nearest Wood via known-position fallback")
+## Pickup is a true instantaneous interaction (ADR 5, Ticket 3 of the GOAP
+## rework): GoTo already owns the travel leg (Ticket 2), so PickupWood must
+## never call move_to itself - it only delegates the grab intent to
+## attempt_pickup() and completes.
+func _test_pickup_wood_attempts_pickup_and_completes_without_moving() -> void:
+	print("[Test] PickupWood delegates to attempt_pickup and completes, without moving")
 	var agent = _make_mock_agent("""
-var _known_positions: Dictionary = {"Wood": [Vector2(700, 800)]}
+var _pickup_called: bool = false
+var _pickup_type: String = ""
 
-func get_agent_position() -> Vector2:
-	return Vector2(50, 50)
-
-func get_nearest_resource(_pos: Vector2, _resource_type: String) -> Node:
-	return null
-
-func get_known_positions() -> Dictionary:
-	return _known_positions
-
-func set_target_resource(_node: Node) -> void:
-	pass
+func attempt_pickup(resource_type: String) -> void:
+	_pickup_called = true
+	_pickup_type = resource_type
 """)
 	GoapActionExecutor.execute_action("PickupWood", agent)
-	_assert(agent._move_called, "move_to was called")
-	_assert(agent._move_target.distance_to(Vector2(700, 800)) < 1.0, "Moved to known Wood position")
+	_assert(agent._pickup_called, "attempt_pickup was called")
+	_assert(agent._pickup_type == "Wood", "attempt_pickup was called with Wood (got: %s)" % agent._pickup_type)
+	_assert(agent._completed, "complete_action called")
+	_assert(not agent._move_called, "PickupWood never calls move_to - GoTo already owns travel")
+
+
+func _test_pickup_food_attempts_pickup_and_completes_without_moving() -> void:
+	print("[Test] PickupFood delegates to attempt_pickup and completes, without moving")
+	var agent = _make_mock_agent("""
+var _pickup_called: bool = false
+var _pickup_type: String = ""
+
+func attempt_pickup(resource_type: String) -> void:
+	_pickup_called = true
+	_pickup_type = resource_type
+""")
+	GoapActionExecutor.execute_action("PickupFood", agent)
+	_assert(agent._pickup_called, "attempt_pickup was called")
+	_assert(agent._pickup_type == "Food", "attempt_pickup was called with Food (got: %s)" % agent._pickup_type)
+	_assert(agent._completed, "complete_action called")
+	_assert(not agent._move_called, "PickupFood never calls move_to - GoTo already owns travel")
 
 
 func _test_random_explore_moves_within_bounds() -> void:

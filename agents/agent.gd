@@ -9,7 +9,6 @@ var agent_id: String
 var energy: float = 100.0
 var hunger: float = 0.0
 var held_item: String = "None"
-var target_resource: Node = null
 
 var nest_ref: Node2D = null
 var resource_manager_ref: Node = null
@@ -28,6 +27,7 @@ var _is_dead: bool = false
 var _planning_interval: float = 2.0
 var _agent_speed: float = 200.0
 var _discovery_radius: float = 50.0
+var _interaction_radius: float = 50.0
 var discovered_resource_type: String = ""
 var discovered_resource_pos: Vector2 = Vector2.ZERO
 var _known_positions: Dictionary = {}
@@ -55,6 +55,7 @@ func _load_sim_config() -> void:
 	_agent_speed = data.get("agentSpeed", 200.0)
 	_planning_interval = data.get("planningInterval", 2.0)
 	_discovery_radius = data.get("discoveryRadius", 50.0)
+	_interaction_radius = data.get("interactionRadius", 50.0)
 	if not data.has("mapMinX") or not data.has("mapMinY") or not data.has("mapMaxX") or not data.has("mapMaxY"):
 		push_error("agent: simulation.json missing map bounds (mapMinX, mapMinY, mapMaxX, mapMaxY)")
 		return
@@ -112,14 +113,20 @@ func _build_world_state() -> WorldState:
 
 	var food_visible := false
 	var wood_visible := false
+	var at_food_position := false
+	var at_wood_position := false
 
 	if resource_manager_ref:
 		var food_node = resource_manager_ref.get_nearest_resource(global_position, "Food")
-		if food_node and is_instance_valid(food_node) and global_position.distance_to(food_node.global_position) < _discovery_radius:
-			food_visible = true
+		if food_node and is_instance_valid(food_node):
+			var food_dist: float = global_position.distance_to(food_node.global_position)
+			food_visible = food_dist < _discovery_radius
+			at_food_position = food_dist < _interaction_radius
 		var wood_node = resource_manager_ref.get_nearest_resource(global_position, "Wood")
-		if wood_node and is_instance_valid(wood_node) and global_position.distance_to(wood_node.global_position) < _discovery_radius:
-			wood_visible = true
+		if wood_node and is_instance_valid(wood_node):
+			var wood_dist: float = global_position.distance_to(wood_node.global_position)
+			wood_visible = wood_dist < _discovery_radius
+			at_wood_position = wood_dist < _interaction_radius
 
 		var blackboard = null
 		if nest_ref and nest_ref.has_method("get_blackboard"):
@@ -135,7 +142,8 @@ func _build_world_state() -> WorldState:
 	var has_unreported_discovery: bool = not discovered_resource_type.is_empty()
 
 	return WorldState.build(held_item, energy, hunger, at_nest, food_visible, wood_visible,
-		_near_unreported_resource, has_known_food, has_known_wood, has_unreported_discovery)
+		_near_unreported_resource, has_known_food, has_known_wood, has_unreported_discovery,
+		at_food_position, at_wood_position)
 
 
 ## Scans for a nearby resource the Blackboard doesn't know about yet and
@@ -165,23 +173,12 @@ func _scan_for_discovery() -> void:
 
 
 func _on_arrived_at_target() -> void:
-	if target_resource and is_instance_valid(target_resource):
-		var res: ResourceNode = target_resource as ResourceNode
-		if res:
-			var extracted := res.extract(1)
-			if extracted > 0:
-				pick_up_item(res.resource_type)
-		target_resource = null
 	action_completed.emit()
 
 
 func _on_role_changed(_agent_id: String, _old_role: String, _new_role: String) -> void:
 	_goap_cycle.on_role_changed()
 	role_changed.emit(agent_id, _old_role, _new_role)
-
-
-func get_agent_position() -> Vector2:
-	return global_position
 
 
 func move_to(target: Vector2) -> void:
@@ -208,8 +205,25 @@ func get_nearest_resource(pos: Vector2, resource_type: String) -> Node:
 	return null
 
 
-func set_target_resource(node: Node) -> void:
-	target_resource = node
+## Instantaneous interaction, gated on Interaction Range (ADR 5): GoTo already
+## owns the travel leg (Ticket 2), so this never moves the agent - it grabs
+## only if a node of resource_type is already within arm's reach, and is a
+## no-op (still completes) otherwise, matching every other Pickup dishonesty
+## case that Action Failure detection (Ticket 4) will catch. Hands are single-
+## slot (CONTEXT.md: Held Item) - refuses to overwrite an already-held item.
+func attempt_pickup(resource_type: String) -> void:
+	if held_item != "None":
+		return
+	var node: Node = get_nearest_resource(global_position, resource_type)
+	if not node or not is_instance_valid(node):
+		return
+	if global_position.distance_to(node.global_position) >= _interaction_radius:
+		return
+	if not node.has_method("extract"):
+		return
+	var extracted: int = node.extract(1)
+	if extracted > 0:
+		pick_up_item(resource_type)
 
 
 func get_known_positions() -> Dictionary:
@@ -249,10 +263,6 @@ func clear_discovered_resource() -> void:
 
 func get_world_bounds() -> Rect2:
 	return Rect2(_map_min, _map_max - _map_min)
-
-
-func get_discovery_radius() -> float:
-	return _discovery_radius
 
 
 func get_role_component() -> Node:

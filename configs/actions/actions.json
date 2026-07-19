@@ -26,19 +26,19 @@
   {
     "name": "PickupFood",
     "cost": 1.0,
-    "preconditions": { "known_food_position": true },
+    "preconditions": { "has_item": false, "at_food_position": true },
     "effects": { "has_food": true }
   },
   {
     "name": "PickupWood",
     "cost": 1.0,
-    "preconditions": { "known_wood_position": true },
+    "preconditions": { "has_item": false, "at_wood_position": true },
     "effects": { "has_wood": true }
   },
   {
     "name": "DepositResource",
     "cost": 1.0,
     "preconditions": { "has_item": true, "at_nest": true },
-    "effects": { "has_food": false, "has_wood": false }
+    "effects": { "has_food": false, "has_wood": false, "has_item": false }
   }
 ]

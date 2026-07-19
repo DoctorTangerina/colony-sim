@@ -116,7 +116,10 @@ func _test_agent_replans_when_resource_disappears_mid_plan() -> void:
 
 	_assert(agent._goap_cycle.current_goal != "CollectFood", "Stale CollectFood goal was abandoned (got: %s)" % agent._goap_cycle.current_goal)
 	_assert(agent._goap_cycle.current_goal == "CollectWood", "Agent replanned onto CollectWood (got: %s)" % agent._goap_cycle.current_goal)
-	_assert(agent._goap_cycle.current_plan == ["PickupWood"], "New plan targets the still-visible Wood resource (got: %s)" % [agent._goap_cycle.current_plan])
+	# Pickup is now an instantaneous, Interaction-Range-gated interaction
+	# (ADR 5, Ticket 3) - the agent starts away from the Wood node, so the
+	# plan must include a GoTo[Wood] leg before PickupWood can run.
+	_assert(agent._goap_cycle.current_plan == ["GoTo[Wood]", "PickupWood"], "New plan routes to the still-known Wood resource before picking it up (got: %s)" % [agent._goap_cycle.current_plan])
 	_assert(agent._goap_cycle._action_in_progress, "Agent immediately started executing the new plan")
 
 

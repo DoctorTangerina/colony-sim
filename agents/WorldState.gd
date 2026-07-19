@@ -21,6 +21,8 @@ extends Resource
 ## - known_food_position (bool): the Blackboard holds at least one Food position (permanent field - Blackboard is kept, see Ticket 14).
 ## - known_wood_position (bool): the Blackboard holds at least one Wood position (permanent field - Blackboard is kept, see Ticket 14).
 ## - has_unreported_discovery (bool): agent is carrying a discovered resource position it has not yet reported to the Nest (persists as the agent travels, unlike near_unreported_resource which is proximity-only).
+## - at_food_position (bool): a Food resource node is within Interaction Range (arm's-length) of the agent right now - distinct from food_visible's Discovery Radius (seeing != reaching).
+## - at_wood_position (bool): a Wood resource node is within Interaction Range of the agent right now - distinct from wood_visible's Discovery Radius.
 var at_nest: bool = false
 var has_food: bool = false
 var has_wood: bool = false
@@ -35,6 +37,8 @@ var near_unreported_resource: bool = false
 var known_food_position: bool = false
 var known_wood_position: bool = false
 var has_unreported_discovery: bool = false
+var at_food_position: bool = false
+var at_wood_position: bool = false
 
 
 static func build(
@@ -47,7 +51,9 @@ static func build(
 	near_unreported_resource: bool = false,
 	known_food_position: bool = false,
 	known_wood_position: bool = false,
-	has_unreported_discovery: bool = false
+	has_unreported_discovery: bool = false,
+	at_food_position: bool = false,
+	at_wood_position: bool = false
 ) -> WorldState:
 	var state := WorldState.new()
 	state.at_nest = at_nest
@@ -64,6 +70,8 @@ static func build(
 	state.known_food_position = known_food_position
 	state.known_wood_position = known_wood_position
 	state.has_unreported_discovery = has_unreported_discovery
+	state.at_food_position = at_food_position
+	state.at_wood_position = at_wood_position
 	return state
 
 
@@ -109,9 +117,7 @@ func clone() -> WorldState:
 
 func to_dict() -> Dictionary:
 	var dict := {}
-	var fields := ["at_nest", "has_food", "has_wood", "has_item", "low_energy", "high_hunger",
-		"food_visible", "wood_visible", "resource_visible", "enemy_near", "near_unreported_resource",
-		"known_food_position", "known_wood_position", "has_unreported_discovery"]
+	var fields := get_field_keys()
 	for field in fields:
 		dict[field] = get_field(field)
 	return dict
@@ -120,7 +126,8 @@ func to_dict() -> Dictionary:
 func get_field_keys() -> Array:
 	return ["at_nest", "has_food", "has_wood", "has_item", "low_energy", "high_hunger",
 		"food_visible", "wood_visible", "resource_visible", "enemy_near", "near_unreported_resource",
-		"known_food_position", "known_wood_position", "has_unreported_discovery"]
+		"known_food_position", "known_wood_position", "has_unreported_discovery",
+		"at_food_position", "at_wood_position"]
 
 
 func get_field(key: String) -> Variant:
@@ -139,6 +146,8 @@ func get_field(key: String) -> Variant:
 		"known_food_position": return known_food_position
 		"known_wood_position": return known_wood_position
 		"has_unreported_discovery": return has_unreported_discovery
+		"at_food_position": return at_food_position
+		"at_wood_position": return at_wood_position
 		_: return null
 
 
@@ -158,4 +167,6 @@ func set_field(key: String, value: Variant) -> void:
 		"known_food_position": known_food_position = value
 		"known_wood_position": known_wood_position = value
 		"has_unreported_discovery": has_unreported_discovery = value
+		"at_food_position": at_food_position = value
+		"at_wood_position": at_wood_position = value
 		_: _fail_unrecognized_key(key)

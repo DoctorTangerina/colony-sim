@@ -8,10 +8,13 @@ extends CharacterBody2D
 ## physics/movement base while also satisfying this type).
 ##
 ## move_to through get_known_positions are the ticket-specified minimal set;
-## get_agent_position, get_world_bounds, and deposit_at_nest were added
-## because RandomExplore, PickupFood/PickupWood, and DepositResource (all
-## kept, spec-required actions) still need them - omitting them would force
-## the executor back to direct field access for those actions.
+## get_world_bounds and deposit_at_nest were added because RandomExplore and
+## DepositResource (both kept, spec-required actions) still need them -
+## omitting them would force the executor back to direct field access for
+## those actions. attempt_pickup encapsulates PickupFood/PickupWood's grab
+## (find nearest node of a type via get_nearest_resource, range-check,
+## extract) behind one call, matching deposit_at_nest's shape, so the
+## executor orchestrates a single intent instead of several primitives.
 
 func move_to(_target: Vector2) -> void:
 	pass
@@ -26,6 +29,13 @@ func get_held_item() -> String:
 
 
 func pick_up_item(_item: String) -> void:
+	pass
+
+
+## Instantaneous, Interaction-Range-gated grab (ADR 5) - never moves the
+## agent. A no-op if nothing of resource_type is within reach, or if the
+## agent's hands are already full (single-slot: CONTEXT.md's Held Item).
+func attempt_pickup(_resource_type: String) -> void:
 	pass
 
 
@@ -49,16 +59,8 @@ func get_nearest_resource(_pos: Vector2, _resource_type: String) -> Node:
 	return null
 
 
-func set_target_resource(_node: Node) -> void:
-	pass
-
-
 func get_known_positions() -> Dictionary:
 	return {}
-
-
-func get_agent_position() -> Vector2:
-	return Vector2.ZERO
 
 
 func get_world_bounds() -> Rect2:
@@ -67,7 +69,3 @@ func get_world_bounds() -> Rect2:
 
 func deposit_at_nest(_item_type: String) -> void:
 	pass
-
-
-func get_discovery_radius() -> float:
-	return 0.0

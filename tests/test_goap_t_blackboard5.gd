@@ -19,7 +19,8 @@ func _ready() -> void:
 	_test_world_state_known_wood_position()
 	_test_world_state_no_known_positions()
 	_test_goto_food_uses_known_food_position()
-	_test_pickup_food_uses_known_position_fallback()
+	_test_pickup_food_is_instantaneous_and_never_moves()
+	_test_pickup_food_grabs_when_within_interaction_range()
 	_test_agent_world_state_reads_blackboard()
 	_test_nest_periodic_cleanup()
 
@@ -270,8 +271,12 @@ func move_to(target: Vector2) -> void:
 	return agent_script.new()
 
 
-func _test_pickup_food_uses_known_position_fallback() -> void:
-	print("[Test] PickupFood uses known positions when resource not visible, not yet the far real one")
+## Pickup is a true instantaneous interaction (ADR 5, Ticket 3 of the GOAP
+## rework): GoTo already walked the agent to a known position (Ticket 2), so
+## PickupFood must never itself call move_to, even given a known position far
+## from the agent's current one.
+func _test_pickup_food_is_instantaneous_and_never_moves() -> void:
+	print("[Test] PickupFood never calls move_to, even with a known position far away")
 	var agent = _make_mock_agent_recording_move_to()
 	agent.set("agent_id", "test_agent")
 	agent.set("held_item", "None")
@@ -287,10 +292,33 @@ func _test_pickup_food_uses_known_position_fallback() -> void:
 	agent.set("_known_positions", {"Food": [known_pos]})
 
 	GoapActionExecutor.execute_action("PickupFood", agent)
-	_assert(agent.get("target_resource") == null,
-		"Target resource stays unset until the agent is actually within discovery range of the real node")
-	_assert(agent.get("_move_called") and agent.get("_move_target").distance_to(known_pos) < 1.0,
-		"Agent travels toward the known (blackboard-reported) food position first")
+	_assert(not agent.get("_move_called"), "PickupFood never calls move_to (got move_called=%s)" % agent.get("_move_called"))
+	_assert(agent.get("held_item") == "None", "Held item stays None - the known position is far outside Interaction Range")
+
+
+## Positive counterpart: when the agent is genuinely within Interaction Range
+## of a real node, PickupFood's real attempt_pickup() grabs it - no hollow
+## pickup (ADR 5 defect #3).
+func _test_pickup_food_grabs_when_within_interaction_range() -> void:
+	print("[Test] PickupFood grabs the resource when the agent is within Interaction Range")
+	var agent = _make_mock_agent_recording_move_to()
+	agent.set("agent_id", "test_agent")
+	agent.set("held_item", "None")
+	agent.set("energy", 100.0)
+	agent.set("hunger", 0.0)
+	agent.set("nest_ref", null)
+	agent.set("_interaction_radius", 50.0)
+	agent.set("global_position", Vector2(300, 400))
+
+	var node_pos = Vector2(300, 400)
+	var node = _make_mock_resource_node("Food", node_pos)
+	var rm = _make_mock_resource_manager([node])
+	agent.set("resource_manager_ref", rm)
+
+	GoapActionExecutor.execute_action("PickupFood", agent)
+	_assert(not agent.get("_move_called"), "PickupFood never calls move_to")
+	_assert(agent.get("held_item") == "Food", "Held item reflects the grab (got: %s)" % agent.get("held_item"))
+	_assert(node.remaining_amount == 99, "The node's stock decreased by exactly 1 (got: %s)" % node.remaining_amount)
 
 
 func _test_agent_world_state_reads_blackboard() -> void:

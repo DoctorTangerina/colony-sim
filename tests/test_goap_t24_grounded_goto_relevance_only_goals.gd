@@ -19,7 +19,7 @@ func _ready() -> void:
 
 	_test_goto_grounds_nest_from_real_configs()
 	_test_goto_destination_kinds_derive_from_resource_registry()
-	_test_goto_only_grounds_kinds_with_a_matching_worldstate_field()
+	_test_goto_grounds_all_kinds_now_that_ticket_3_added_their_fields()
 	_test_goto_effect_claims_only_its_own_destination()
 	_test_no_role_config_lists_goto()
 	_test_actions_json_has_no_move_to_or_return_to_nest()
@@ -91,16 +91,20 @@ func _test_goto_destination_kinds_derive_from_resource_registry() -> void:
 		"Kinds without a matching field are not grounded (got: %s)" % [names])
 
 
-## Today's real WorldState schema only carries an "arrived" field for the
-## Nest (at_nest) - Food/Wood get at_food_position/at_wood_position in a
-## later ticket. Grounding must not fabricate an effect key WorldState would
-## reject (Ticket 1's loud-failure hardening) just because resources.json
-## lists Food/Wood.
-func _test_goto_only_grounds_kinds_with_a_matching_worldstate_field() -> void:
-	print("[Test] GoTo grounds only Nest against today's real WorldState schema (Food/Wood have no Sensed Fact yet)")
+## At Ticket 2, WorldState only carried an "arrived" field for the Nest
+## (at_nest) - Food/Wood had no Sensed Fact yet, so grounding skipped them
+## rather than fabricate an effect key WorldState would reject (Ticket 1's
+## loud-failure hardening). Ticket 3 added at_food_position/at_wood_position,
+## so this same, unmodified grounding code now produces all three against the
+## real schema with no planner change required - the exact consequence
+## Ticket 2's implementation notes called out in advance.
+func _test_goto_grounds_all_kinds_now_that_ticket_3_added_their_fields() -> void:
+	print("[Test] GoTo grounds Nest, Food, and Wood against today's real WorldState schema")
 	var actions := GotoGrounding.build_actions(["Food", "Wood"], WorldState.new().get_field_keys())
-	_assert(actions.size() == 1, "Exactly one grounded GoTo action today (got: %s)" % [actions])
-	_assert(actions[0]["name"] == "GoTo[Nest]", "The one grounded action is GoTo[Nest] (got: %s)" % [actions])
+	var names: Array = []
+	for action in actions:
+		names.append(action["name"])
+	_assert(names == ["GoTo[Nest]", "GoTo[Food]", "GoTo[Wood]"], "All three destination kinds are grounded (got: %s)" % [names])
 
 
 func _test_goto_effect_claims_only_its_own_destination() -> void:

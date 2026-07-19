@@ -44,29 +44,17 @@ static func _rest(agent: IAgentActions) -> void:
 
 
 static func _pickup_food(agent: IAgentActions) -> void:
-	_pickup_resource("Food", agent)
+	agent.attempt_pickup("Food")
+	agent.complete_action()
 
 
 static func _pickup_wood(agent: IAgentActions) -> void:
-	_pickup_resource("Wood", agent)
+	agent.attempt_pickup("Wood")
+	agent.complete_action()
 
 
 static func _deposit_resource(agent: IAgentActions) -> void:
 	agent.deposit_at_nest(agent.get_held_item())
-	agent.complete_action()
-
-
-static func _pickup_resource(resource_type: String, agent: IAgentActions) -> void:
-	var agent_pos: Vector2 = agent.get_agent_position()
-	var node: Node = agent.get_nearest_resource(agent_pos, resource_type)
-	if node and is_instance_valid(node) and agent_pos.distance_to(node.global_position) < agent.get_discovery_radius():
-		agent.set_target_resource(node)
-		agent.move_to(node.global_position)
-		return
-	var known_positions: Dictionary = agent.get_known_positions()
-	if known_positions.has(resource_type) and known_positions[resource_type].size() > 0:
-		agent.move_to(known_positions[resource_type][0])
-		return
 	agent.complete_action()
 
 
