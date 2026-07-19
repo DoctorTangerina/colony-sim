@@ -6,7 +6,7 @@ combining **GOAP planning** (Goal-Oriented Action Planning) per agent with
 is the research platform behind a study comparing need-based role
 distribution against a static, resource-blind split.
 
-<!-- TODO: screenshot of the simulation with the debugger panel open -->
+![The simulation with the debugger panel open: agents (blue), the Nest (orange hexagon), resource nodes, and the live agent table with roles, goals, and plans](.github/debugger-panel.png)
 
 Agents spawn with no role, discover resources, report them to a shared
 blackboard, and take on roles (Gatherer, Explorer, Guard) as the colony's
